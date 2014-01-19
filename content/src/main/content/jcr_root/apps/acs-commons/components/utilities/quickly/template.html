@@ -1,0 +1,31 @@
+<link rel="stylesheet" href="/apps/acs-commons/components/utilities/quickly/clientlibs/app.css"/>
+
+<div id="acs-commons-quickly-app" ng-app="quickly">
+    <div id="acs-commons-quickly-ctrl" ng-controller="QuicklyCtrl">
+        <div id="acs-commons-quickly"
+             ng-show="app.visible"
+             ng-enter="app.processSelected()"
+             ng-up="app.selectUp()"
+             ng-down="app.selectDown()">
+
+            <div class="input">
+                <input id="acs-commons-quickly-cmd" ng-model="data.cmd" type="text"/>
+            </div>
+
+            <ul class="results">
+                <li ng-repeat="result in data.results"
+                     ng-click="app.selectResult(result)"
+                     ng-class="{selected: result.selected}"
+                     class="result">
+                    <h1>{{result.title}}</h1>
+                    <p class="description">{{result.description}}</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="/apps/acs-commons/components/utilities/quickly/clientlibs/app.js"></script>
+<script type="text/javascript">
+    angular.bootstrap(document.getElementById('acs-commons-quickly-app'), ['quickly']);
+</script>

@@ -81,6 +81,7 @@
                     <predefinedVars>jQuery,window,$</predefinedVars>
                     <excludes>
                         <exclude>**/extensions/**/*.js</exclude>
+                        <exclude>**/etc/clientlibs/acs-commons/angularjs/**/*.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>
