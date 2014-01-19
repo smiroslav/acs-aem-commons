@@ -82,6 +82,12 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
                                       final Command cmd) {
         final List<Result> results = new LinkedList<Result>();
 
+        for(final Result result : DEFAULT_RESULTS) {
+            if(StringUtils.startsWith(result.getTitle(), cmd.getParam())) {
+                results.add(result);
+            }
+        }
+
         final Map<String, String> map = new HashMap<String, String>();
         map.put("type", "cq:Page");
         map.put("nodename", cmd.getParam() + "*");
@@ -94,8 +100,8 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
         for (final Hit hit : result.getHits()) {
             try {
                 final String path = hit.getPath();
-                if (StringUtils.startsWith(path, "/content")) {
-                    results.add(new GoResult(hit.getTitle(), hit.getPath(), "/siteadmin#" + hit.getPath()));
+                if (StringUtils.startsWith(path, "/content/dam")) {
+                    results.add(new GoResult(hit.getTitle(), hit.getPath(), "/damadmin#" + hit.getPath()));
                 } else if (StringUtils.startsWith(path, "/content")) {
                     results.add(new GoResult(hit.getTitle(), hit.getPath(), "/siteadmin#" + hit.getPath()));
                 } else if (StringUtils.startsWith(path, "/etc")) {
@@ -104,10 +110,6 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
             } catch (RepositoryException e) {
                 log.error("Could not access repository for hit: {}. Lucene index may be out of sync.", hit);
             }
-        }
-
-        if (results.isEmpty()) {
-            return DEFAULT_RESULTS;
         }
 
         return results;
