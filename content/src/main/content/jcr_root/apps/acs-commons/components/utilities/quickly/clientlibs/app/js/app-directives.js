@@ -19,6 +19,30 @@
  */
 /*global quickly: false, angular: false */
 
+
+quickly.ui = {};
+quickly.ui.scrollResults = function() {
+
+    var container = $('#acs-commons-quickly-app .results');
+    var el = $('#acs-commons-quickly-app .result.selected');
+
+    var containerHeight = container.height();
+    var containerTop = container.scrollTop();
+    var containerBottom = contTop + contHeight ;
+
+    var elHeight = el.outerHeight(true);
+    var elTop = el.offset().top - container.offset().top + containerTop;
+    var elBottom = elemTop + elHeight;
+
+    if(elBottom > containerBottom) {
+        // Scroll down
+        container.scrollTop(elTop + elHeight - containerHeight);
+    } else if(elemTop < contTop) {
+        // Scroll Up
+        container.scrollTop(containerTop - elHeight);
+    }
+};
+
 quickly.directive('ngEnter', function () {
     return function (scope, element, attrs) {
         element.bind("keydown keypress", function (event) {
@@ -48,6 +72,8 @@ quickly.directive('ngUp', function () {
                     scope.$eval(attrs.ngUp);
                 });
 
+                quickly.ui.scrollResults();
+
                 event.preventDefault();
             }
         });
@@ -61,6 +87,8 @@ quickly.directive('ngDown', function () {
                 scope.$apply(function (){
                     scope.$eval(attrs.ngDown);
                 });
+
+                quickly.ui.scrollResults();
 
                 event.preventDefault();
             }
