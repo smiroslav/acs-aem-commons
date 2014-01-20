@@ -23,23 +23,23 @@
 quickly.ui = {};
 quickly.ui.scrollResults = function() {
 
-    var container = $('#acs-commons-quickly-app .results');
-    var el = $('#acs-commons-quickly-app .result.selected');
+    var container = $('#acs-commons-quickly-app .results'),
+        selected = $('#acs-commons-quickly-app .result.selected'),
 
-    var containerHeight = container.height();
-    var containerTop = container.scrollTop();
-    var containerBottom = contTop + contHeight ;
+        containerHeight = container.height(),
+        containerTop = container.scrollTop(),
+        containerBottom = containerTop + containerHeight,
 
-    var elHeight = el.outerHeight(true);
-    var elTop = el.offset().top - container.offset().top + containerTop;
-    var elBottom = elemTop + elHeight;
+        selectedHeight = selected.outerHeight(true),
+        selectedTop = selected.offset().top - container.offset().top + containerTop,
+        selectedBottom = selectedTop + selectedHeight;
 
-    if(elBottom > containerBottom) {
+    if(selectedBottom > containerBottom) {
         // Scroll down
-        container.scrollTop(elTop + elHeight - containerHeight);
-    } else if(elemTop < contTop) {
+        container.scrollTop(selectedTop + selectedHeight - containerHeight);
+    } else if(selectedTop < containerTop) {
         // Scroll Up
-        container.scrollTop(containerTop - elHeight);
+        container.scrollTop(containerTop - selectedHeight);
     }
 };
 
