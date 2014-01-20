@@ -18,7 +18,7 @@
  * #L%
  */
 
-/*global quickly: false, angular: false, console: false */
+/*global quickly: false, angular: false */
 
 quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scope, $http, $timeout){
 
@@ -57,7 +57,6 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
                 cmd: $scope.data.cmd
             }
         }).success(function(data, status, headers, config) {
-            console.log(data.results);
             $scope.data.results = data.results || [];
 
             if($scope.data.results && $scope.data.results[0]) {
@@ -114,7 +113,6 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
         }
 
         result.selected = true;
-        console.log(result);
     };
 
     $scope.util.findSelectedIndex = function() {

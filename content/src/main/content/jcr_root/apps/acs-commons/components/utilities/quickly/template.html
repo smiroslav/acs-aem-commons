@@ -8,17 +8,17 @@
              ng-up="app.selectUp()"
              ng-down="app.selectDown()">
 
-            <div class="input">
-                <input id="acs-commons-quickly-cmd" ng-model="data.cmd" type="text"/>
+            <div class="quickly-cmd-wrapper">
+                <input id="acs-commons-quickly-cmd" ng-model="data.cmd" class="quickly-cmd" type="text"/>
             </div>
 
-                <ul class="results">
+                <ul class="quickly-results">
                     <li ng-repeat="result in data.results"
                          ng-click="app.selectResult(result)"
                          ng-class="{selected: result.selected}"
-                         class="result">
-                        <h1>{{result.title}}</h1>
-                        <p class="description">{{result.description}}</p>
+                         class="quickly-result">
+                        <h1 class="quickly-result-title">{{result.title}}</h1>
+                        <p class="quickly-result-description">{{result.description}}</p>
                     </li>
                 </ul>
         </div>

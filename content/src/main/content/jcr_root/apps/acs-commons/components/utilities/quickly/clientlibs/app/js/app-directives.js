@@ -23,8 +23,8 @@
 quickly.ui = {};
 quickly.ui.scrollResults = function() {
 
-    var container = $('#acs-commons-quickly-app .results'),
-        selected = $('#acs-commons-quickly-app .result.selected'),
+    var container = $('#acs-commons-quickly-app .quickly-results'),
+        selected = $('#acs-commons-quickly-app .quickly-result.selected'),
 
         containerHeight = container.height(),
         containerTop = container.scrollTop(),
