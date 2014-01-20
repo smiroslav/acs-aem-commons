@@ -30,6 +30,8 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,15 +76,22 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
     protected List<Result> withParams(final ResourceResolver resourceResolver, final Command cmd) {
         final List<Result> results = new LinkedList<Result>();
 
-        final Result result = resultHelper.matchFullPath(resourceResolver, cmd.getParam());
-        if(result != null) {
-            results.add(result);
+        final Resource paramResource = resultHelper.matchFullPath(resourceResolver, cmd.getParam());;
+        if(paramResource != null) {
+            results.add(new CRXDEResult(paramResource));
         }
 
-        results.addAll(resultHelper.startsWith(resourceResolver, cmd.getParam()));
+        final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
+        for(final Resource startswithResource : startsWithResources) {
+            results.add(new CRXDEResult(startswithResource));
+        }
 
         if(results.isEmpty()) {
-            results.addAll(resultHelper.matchNodeName(resourceResolver, cmd.getParam()));
+            final List<Resource> matchedResources = resultHelper.matchNodeName(resourceResolver, cmd.getParam(),
+                    JcrConstants.NT_BASE, 25);
+            for(final Resource matchedResource : matchedResources) {
+                results.add(new CRXDEResult(matchedResource));
+            }
         }
 
         if (results.isEmpty()) {
@@ -91,6 +100,4 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
 
         return results;
     }
-
-
 }

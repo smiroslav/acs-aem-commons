@@ -20,14 +20,15 @@
 
 package com.adobe.acs.commons.quickly;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
 import java.util.List;
 
 public interface ResultHelper {
-    Result matchFullPath(ResourceResolver resourceResolver, String path);
+    Resource matchFullPath(ResourceResolver resourceResolver, String path);
 
-    List<Result> startsWith(ResourceResolver resourceResolver, String path);
+    List<Resource> startsWith(ResourceResolver resourceResolver, String path);
 
-    List<Result> matchNodeName(ResourceResolver resourceResolver, String path);
+    List<Resource> matchNodeName(ResourceResolver resourceResolver, String path, String nodeType, int limit);
 }

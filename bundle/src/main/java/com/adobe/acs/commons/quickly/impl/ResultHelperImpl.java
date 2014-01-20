@@ -21,9 +21,7 @@
 package com.adobe.acs.commons.quickly.impl;
 
 
-import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
-import com.adobe.acs.commons.quickly.commands.impl.crxde.CRXDEResult;
 import com.day.cq.search.PredicateGroup;
 import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
@@ -33,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
@@ -55,20 +54,13 @@ public class ResultHelperImpl implements ResultHelper {
     private QueryBuilder queryBuilder;
 
     @Override
-    public Result matchFullPath(final ResourceResolver resourceResolver, final String path) {
-        final Resource resource = resourceResolver.getResource(path);
-
-        if (resource != null) {
-            return new CRXDEResult(resource.getName(), resource.getPath());
-        }
-
-        return null;
+    public Resource matchFullPath(final ResourceResolver resourceResolver, final String path) {
+        return resourceResolver.getResource(path);
     }
 
-
     @Override
-    public List<Result> startsWith(final ResourceResolver resourceResolver, final String path) {
-        List<Result> results = new LinkedList<Result>();
+    public List<Resource> startsWith(final ResourceResolver resourceResolver, final String path) {
+        List<Resource> results = new LinkedList<Resource>();
 
         Resource parent = resourceResolver.getResource(path);
         if (parent == null) {
@@ -80,7 +72,7 @@ public class ResultHelperImpl implements ResultHelper {
             while (children.hasNext()) {
                 final Resource child = children.next();
                 if (StringUtils.startsWith(child.getPath(), path)) {
-                    results.add(new CRXDEResult(child.getName(), child.getPath()));
+                    results.add(child);
                 }
             }
         }
@@ -89,13 +81,18 @@ public class ResultHelperImpl implements ResultHelper {
     }
 
     @Override
-    public List<Result> matchNodeName(final ResourceResolver resourceResolver, final String path) {
-        final List<Result> results = new LinkedList<Result>();
+    public List<Resource> matchNodeName(final ResourceResolver resourceResolver, final String path, String nodeType,
+                                        int limit) {
+        final List<Resource> results = new LinkedList<Resource>();
         final Map<String, String> map = new HashMap<String, String>();
 
-        map.put("type", "nt:base");
+        if(nodeType == null) {
+            nodeType = JcrConstants.NT_BASE;
+        }
+
+        map.put("type", nodeType);
         map.put("nodename", path + "*");
-        map.put("p.limit", "50");
+        map.put("p.limit", String.valueOf(limit));
 
         final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
                 resourceResolver.adaptTo(Session.class));
@@ -103,7 +100,7 @@ public class ResultHelperImpl implements ResultHelper {
 
         for (final Hit hit : result.getHits()) {
             try {
-                results.add(new CRXDEResult(hit.getResource().getName(), hit.getPath()));
+                results.add(hit.getResource());
             } catch (RepositoryException e) {
                 log.error("Could not access repository for hit: {}. Lucene index may be out of sync.", hit);
             }

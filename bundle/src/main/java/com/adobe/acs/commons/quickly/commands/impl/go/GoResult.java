@@ -21,12 +21,30 @@
 package com.adobe.acs.commons.quickly.commands.impl.go;
 
 import com.adobe.acs.commons.quickly.AbstractResult;
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.resource.Resource;
 
 public class GoResult extends AbstractResult {
 
-    public GoResult(final String title, final String path, final String actionURI) {
+    public GoResult(final String title, final String description, final String actionURI) {
         this.title = title;
-        this.description = path;
+        this.description = description;
         this.actionURI = actionURI;
     }
+
+    public GoResult(final Resource resource) {
+        final String path = resource.getPath();
+
+        this.title = resource.getName();
+        this.description = path;
+
+        if (StringUtils.startsWith(path, "/content/dam")) {
+            this.actionURI = "/damadmin#" + path;
+        } else if (StringUtils.startsWith(path, "/content")) {
+            this.actionURI = "/siteadmin#" + path;
+        } else if (StringUtils.startsWith(path, "/etc")) {
+            this.actionURI = "/miscadmin#" + path;
+        }
+    }
+
 }

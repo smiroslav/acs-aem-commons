@@ -21,12 +21,23 @@
 package com.adobe.acs.commons.quickly.commands.impl.open;
 
 import com.adobe.acs.commons.quickly.AbstractResult;
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.resource.Resource;
 
 public class OpenResult extends AbstractResult {
 
-    public OpenResult(final String title, final String path, final String actionURI) {
-        this.title = title;
+    public OpenResult(final Resource resource) {
+        final String path = resource.getPath();
+
+        this.title = resource.getName();
         this.description = path;
-        this.actionURI = actionURI;
+
+        if (StringUtils.startsWith(path, "/content/dam")) {
+            this.actionURI = "/damadmin#" + path;
+        } else if (StringUtils.startsWith(path, "/content")) {
+            this.actionURI = "/cf#" + path + ".html";
+        } else if (StringUtils.startsWith(path, "/etc")) {
+            this.actionURI = path + ".html";
+        }
     }
 }

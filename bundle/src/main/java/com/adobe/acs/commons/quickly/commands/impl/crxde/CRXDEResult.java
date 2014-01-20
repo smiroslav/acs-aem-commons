@@ -21,6 +21,7 @@
 package com.adobe.acs.commons.quickly.commands.impl.crxde;
 
 import com.adobe.acs.commons.quickly.AbstractResult;
+import org.apache.sling.api.resource.Resource;
 
 public class CRXDEResult extends AbstractResult {
     public CRXDEResult() {
@@ -29,9 +30,9 @@ public class CRXDEResult extends AbstractResult {
         this.actionURI = "/crx/de/index.jsp";
     }
 
-    public CRXDEResult(final String title, final String path) {
-        this.title = title;
-        this.description = path;
-        this.actionURI = "/crx/de/index.jsp#" + path;
+    public CRXDEResult(final Resource resource) {
+        this.title = resource.getName();
+        this.description = resource.getPath();
+        this.actionURI = "/crx/de/index.jsp#" + resource.getPath();
     }
 }

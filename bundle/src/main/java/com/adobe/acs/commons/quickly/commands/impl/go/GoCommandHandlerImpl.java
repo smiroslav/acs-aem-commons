@@ -22,12 +22,9 @@ package com.adobe.acs.commons.quickly.commands.impl.go;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
+import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.day.cq.search.PredicateGroup;
-import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
-import com.day.cq.search.result.Hit;
-import com.day.cq.search.result.SearchResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -35,13 +32,11 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +62,9 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
     @Reference
     private QueryBuilder queryBuilder;
 
+    @Reference
+    private ResultHelper resultHelper;
+
     @Override
     public boolean accepts(final ResourceResolver resourceResolver, final Command cmd) {
         return StringUtils.equalsIgnoreCase(CMD, cmd.getOp());
@@ -88,28 +86,11 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
             }
         }
 
-        final Map<String, String> map = new HashMap<String, String>();
-        map.put("type", "cq:Page");
-        map.put("nodename", cmd.getParam() + "*");
-        map.put("p.limit", "20");
+        final List<Resource> resources = resultHelper.matchNodeName(resourceResolver,
+                cmd.getParam(), "cq:Page", 50);
 
-        final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
-                resourceResolver.adaptTo(Session.class));
-        final SearchResult result = query.getResult();
-
-        for (final Hit hit : result.getHits()) {
-            try {
-                final String path = hit.getPath();
-                if (StringUtils.startsWith(path, "/content/dam")) {
-                    results.add(new GoResult(hit.getTitle(), hit.getPath(), "/damadmin#" + hit.getPath()));
-                } else if (StringUtils.startsWith(path, "/content")) {
-                    results.add(new GoResult(hit.getTitle(), hit.getPath(), "/siteadmin#" + hit.getPath()));
-                } else if (StringUtils.startsWith(path, "/etc")) {
-                    results.add(new GoResult(hit.getTitle(), hit.getPath(), "/miscadmin#" + hit.getPath()));
-                }
-            } catch (RepositoryException e) {
-                log.error("Could not access repository for hit: {}. Lucene index may be out of sync.", hit);
-            }
+        for (final Resource resource : resources) {
+            results.add(new GoResult(resource));
         }
 
         return results;
