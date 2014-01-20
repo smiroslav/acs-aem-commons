@@ -90,7 +90,9 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
                 cmd.getParam(), "cq:Page", 50);
 
         for (final Resource resource : resources) {
-            results.add(new GoResult(resource));
+            if(GoResult.accepts(resource)) {
+                results.add(new GoResult(resource));
+            }
         }
 
         return results;

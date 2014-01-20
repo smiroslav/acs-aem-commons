@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
 public class GoResult extends AbstractResult {
+    private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
 
     public GoResult(final String title, final String description, final String actionURI) {
         this.title = title;
@@ -35,16 +36,22 @@ public class GoResult extends AbstractResult {
     public GoResult(final Resource resource) {
         final String path = resource.getPath();
 
-        this.title = resource.getName();
-        this.description = path;
-
         if (StringUtils.startsWith(path, "/content/dam")) {
+            this.title = getAssetTitle(resource);
             this.actionURI = "/damadmin#" + path;
         } else if (StringUtils.startsWith(path, "/content")) {
+            this.title = getPageTitle(resource);
             this.actionURI = "/siteadmin#" + path;
         } else if (StringUtils.startsWith(path, "/etc")) {
+            this.title = getPageTitle(resource);
             this.actionURI = "/miscadmin#" + path;
         }
+
+        this.description = path;
     }
 
+    public static boolean accepts(final Resource resource) {
+        final String path = resource.getPath();
+        return StringUtils.startsWithAny(path, ACCEPT_PREFIXES);
+    }
 }

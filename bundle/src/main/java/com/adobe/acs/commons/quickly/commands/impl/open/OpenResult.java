@@ -25,19 +25,27 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
 public class OpenResult extends AbstractResult {
+    private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
 
     public OpenResult(final Resource resource) {
         final String path = resource.getPath();
 
-        this.title = resource.getName();
-        this.description = path;
-
         if (StringUtils.startsWith(path, "/content/dam")) {
+            this.title = getAssetTitle(resource);
             this.actionURI = "/damadmin#" + path;
         } else if (StringUtils.startsWith(path, "/content")) {
+            this.title = getPageTitle(resource);
             this.actionURI = "/cf#" + path + ".html";
         } else if (StringUtils.startsWith(path, "/etc")) {
+            this.title = getPageTitle(resource);
             this.actionURI = path + ".html";
         }
+
+        this.description = path;
+    }
+
+    public static boolean accepts(final Resource resource) {
+        final String path = resource.getPath();
+        return StringUtils.startsWithAny(path, ACCEPT_PREFIXES);
     }
 }

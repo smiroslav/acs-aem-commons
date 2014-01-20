@@ -35,4 +35,8 @@ public class CRXDEResult extends AbstractResult {
         this.description = resource.getPath();
         this.actionURI = "/crx/de/index.jsp#" + resource.getPath();
     }
+
+    public static boolean accepts(final Resource resource) {
+        return resource != null;
+    }
 }

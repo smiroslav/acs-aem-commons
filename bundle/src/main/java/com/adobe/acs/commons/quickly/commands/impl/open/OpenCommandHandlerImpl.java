@@ -80,7 +80,9 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
                 "cq:Page", 25);
 
         for(final Resource matchedResource : matchedResources) {
-            results.add(new OpenResult(matchedResource));
+            if(OpenResult.accepts(matchedResource)) {
+                results.add(new OpenResult(matchedResource));
+            }
         }
 
         return results;

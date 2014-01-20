@@ -20,7 +20,12 @@
 
 package com.adobe.acs.commons.quickly;
 
+import com.adobe.acs.commons.util.TextUtil;
+import com.day.cq.dam.commons.util.DamUtil;
+import com.day.cq.wcm.api.Page;
+import com.day.cq.wcm.api.PageManager;
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
@@ -29,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AbstractResult implements Result {
+public abstract class AbstractResult implements Result {
     private static final Logger log = LoggerFactory.getLogger(AbstractResult.class);
 
     protected String title;
@@ -46,11 +51,32 @@ public class AbstractResult implements Result {
         return StringUtils.stripToNull(this.description);
     }
 
+    protected String getPageTitle(final Resource resource) {
+        final PageManager pageManager = resource.getResourceResolver().adaptTo(PageManager.class);
+        final Page page = pageManager.getContainingPage(resource);
+
+        if(page != null) {
+            return TextUtil.getFirstNonEmpty(page.getPageTitle(), page.getTitle(), page.getName());
+        } else {
+            return resource.getName();
+        }
+    }
+
+    protected String getAssetTitle(final Resource resource) {
+        if(DamUtil.isAsset(resource)) {
+            return TextUtil.getFirstNonEmpty(
+                    DamUtil.resolveToAsset(resource).getMetadataValue("dc:title"),
+                    resource.getName());
+        } else {
+            return resource.getName();
+        }
+    }
+
     public Map<String, String> toMap() throws IllegalStateException {
         final Map<String, String> map = new HashMap<String, String>();
 
         if (StringUtils.isBlank(this.title)) {
-            log.error("Result cmd and title must have values");
+            log.warn("Result title must have a value");
             return map;
         }
 
