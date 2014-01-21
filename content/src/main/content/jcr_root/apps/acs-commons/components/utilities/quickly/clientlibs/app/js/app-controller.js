@@ -34,11 +34,26 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
         results: []
     };
 
+    /* Method namespaces */
+    $scope.app = {
+        timeout: 0,
+        keyStrokes: 0,
+        resetOnToggle: true,
+        visible: false
+    };
+    $scope.util = {};
 
     /* Watchers */
     $scope.$watch('data.cmd', function(newValue, oldValue) {
         if($scope.app.visible) {
-            $scope.app.getResults();
+            clearTimeout($scope.app.timeout);
+            if($scope.app.keyStrokes >= 2) {
+                $scope.app.keyStrokes = 0;
+                $scope.app.getResults();
+            } else {
+                $scope.app.keyStrokes = $scope.app.keyStrokes + 1;
+                $scope.app.timeout = setTimeout(function() { $scope.app.getResults(); }, 300);
+            }
         }
     });
 
@@ -50,13 +65,6 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
             $scope.app.visible = false;
         }
     });
-
-    /* Method namespaces */
-    $scope.app = {
-        resetOnToggle: true,
-        visible: false
-    };
-    $scope.util = {};
 
     $scope.app.getResults = function() {
         if(!$scope.data.cmd) {
@@ -140,9 +148,4 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
 
         return 0;
     };
-
-    /* App Initialization */
-    var init = function () {};
-    init();
-
 }]);
