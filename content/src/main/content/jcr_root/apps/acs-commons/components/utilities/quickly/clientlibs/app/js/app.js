@@ -28,8 +28,10 @@ $(function() {
     $('body').keypress(function(e){
         var elementId = 'acs-commons-quickly-ctrl';
 
-        // ctrl-space
-        if(e.ctrlKey && e.which === 0) {
+        console.log(e.which);
+        // shift-ctrl-space
+        if((e.ctrlKey && e.which === 0)
+            || (e.shiftKey && e.ctrlKey && e.which === 64)){
             angular.element(document.getElementById(elementId)).scope().app.toggle();
             angular.element(document.getElementById(elementId)).scope().$apply();
             e.preventDefault();
