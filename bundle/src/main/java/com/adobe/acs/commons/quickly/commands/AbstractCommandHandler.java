@@ -51,7 +51,9 @@ public abstract class AbstractCommandHandler implements CommandHandler {
         json.put(KEY_RESULTS, new JSONArray());
 
         for (final Result result : results) {
-            json.accumulate(KEY_RESULTS, result.toJSON());
+            if(result.isValid()) {
+                json.accumulate(KEY_RESULTS, result.toJSON());
+            }
         }
 
         return json;

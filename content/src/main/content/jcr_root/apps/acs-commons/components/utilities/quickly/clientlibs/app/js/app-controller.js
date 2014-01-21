@@ -18,13 +18,19 @@
  * #L%
  */
 
-/*global quickly: false, angular: false */
+/*global quickly: false, angular: false, console: false */
 
 quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scope, $http, $timeout){
 
     /* Data/Models */
     $scope.data = {
         cmd: "",
+        form: {
+            actionURI: '#',
+            method: 'get',
+            target: '_self',
+            params: []
+        },
         results: []
     };
 
@@ -33,6 +39,15 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
     $scope.$watch('data.cmd', function(newValue, oldValue) {
         if($scope.app.visible) {
             $scope.app.getResults();
+        }
+    });
+
+    $scope.$watch('data.form', function(newValue, oldValue) {
+        if($scope.app.visible) {
+            setTimeout(function() {
+                angular.element('#quickly-result-form').submit();
+            }, 100);
+            $scope.app.visible = false;
         }
     });
 
@@ -99,8 +114,8 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
     };
 
     $scope.app.processAction = function(result) {
-        window.location = result.action || '#quickly-action-not-set';
-        $scope.app.toggle();
+        // Actual form submission happens in the watcher for data.form
+        $scope.data.form = result.action;
     };
 
 

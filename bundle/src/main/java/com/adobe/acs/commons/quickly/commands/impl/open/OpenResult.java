@@ -31,13 +31,13 @@ public class OpenResult extends AbstractResult {
         final String path = resource.getPath();
 
         if (StringUtils.startsWith(path, "/content/dam")) {
-            this.title = getAssetTitle(resource);
+            this.title = findAssetTitle(resource);
             this.actionURI = "/damadmin#" + path;
         } else if (StringUtils.startsWith(path, "/content")) {
-            this.title = getPageTitle(resource);
+            this.title = findPageTitle(resource);
             this.actionURI = "/cf#" + path + ".html";
         } else if (StringUtils.startsWith(path, "/etc")) {
-            this.title = getPageTitle(resource);
+            this.title = findPageTitle(resource);
             this.actionURI = path + ".html";
         }
 

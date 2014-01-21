@@ -12,15 +12,26 @@
                 <input id="acs-commons-quickly-cmd" ng-model="data.cmd" class="quickly-cmd" type="text"/>
             </div>
 
-                <ul class="quickly-results">
-                    <li ng-repeat="result in data.results"
-                         ng-click="app.selectResult(result)"
-                         ng-class="{selected: result.selected}"
-                         class="quickly-result">
-                        <h1 class="quickly-result-title">{{result.title}}</h1>
-                        <p class="quickly-result-description">{{result.description}}</p>
-                    </li>
-                </ul>
+            <ul class="quickly-results">
+                <li ng-repeat="result in data.results"
+                     ng-click="app.selectResult(result)"
+                     ng-class="{selected: result.selected}"
+                     class="quickly-result">
+                    <h1 class="quickly-result-title">{{result.title}}</h1>
+                    <p class="quickly-result-description">{{result.description}}</p>
+                </li>
+            </ul>
+
+            <form id="quickly-result-form"
+                  ng-model="data.form"
+                  action="{{data.form.actionURI}}"
+                  method="{{data.form.method}}"
+                  target="{{data.form.target}}">
+                <input ng-repeat="param in (data.form.params || [])"
+                       name="{{param.name}}"
+                       value="{{param.value}}"
+                       type="hidden"/>
+            </form>
         </div>
     </div>
 </div>

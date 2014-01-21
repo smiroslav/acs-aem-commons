@@ -28,12 +28,14 @@ public class CRXDEResult extends AbstractResult {
         this.title = "CRXDE Lite";
         this.description = "/crx/de/index.jsp";
         this.actionURI = "/crx/de/index.jsp";
+        this.actionTarget = "_blank";
     }
 
     public CRXDEResult(final Resource resource) {
         this.title = resource.getName();
         this.description = resource.getPath();
         this.actionURI = "/crx/de/index.jsp#" + resource.getPath();
+        this.actionTarget = "_blank";
     }
 
     public static boolean accepts(final Resource resource) {

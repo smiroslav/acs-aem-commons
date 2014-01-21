@@ -28,10 +28,14 @@ import java.util.Map;
 public interface Result {
 
     String getTitle();
-
     String getDescription();
+    String getActionURI();
+    String getActionMethod();
+    String getActionTarget();
+    // TODO Make MultiMap?
+    Map<String, String> getActionParams();
 
-    Map<String, String> toMap();
+    boolean isValid();
 
     JSONObject toJSON() throws JSONException;
 }

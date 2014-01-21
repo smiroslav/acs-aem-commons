@@ -26,6 +26,7 @@ import com.day.cq.wcm.api.Page;
 import com.day.cq.wcm.api.PageManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
@@ -38,10 +39,12 @@ public abstract class AbstractResult implements Result {
     private static final Logger log = LoggerFactory.getLogger(AbstractResult.class);
 
     protected String title;
-
     protected String description;
-
     protected String actionURI;
+    protected String actionMethod;
+    protected String actionTarget;
+    protected boolean actionAsynchronous = false;
+    protected Map<String, String> actionParams;
 
     public String getTitle() {
         return StringUtils.stripToNull(this.title);
@@ -51,7 +54,76 @@ public abstract class AbstractResult implements Result {
         return StringUtils.stripToNull(this.description);
     }
 
-    protected String getPageTitle(final Resource resource) {
+    @Override
+    public String getActionURI() {
+        if(StringUtils.isBlank(this.actionURI)) {
+            return "#";
+        } else {
+            return this.actionURI;
+        }
+    }
+
+    @Override
+    public String getActionMethod() {
+        if(StringUtils.isBlank(this.actionMethod)) {
+            return "get";
+        } else {
+            return this.actionMethod;
+        }
+    }
+
+    @Override
+    public String getActionTarget() {
+        if(StringUtils.isBlank(this.actionTarget)) {
+            return "_top";
+        } else {
+            return this.actionTarget;
+        }     }
+
+    @Override
+    public Map<String, String> getActionParams() {
+        if(actionParams == null) {
+            return new HashMap<String, String>();
+        } else {
+            return actionParams;
+        }
+    }
+
+    public boolean isActionAsynchronous() {
+        return actionAsynchronous;
+    }
+
+    public boolean isValid() {
+        return StringUtils.isNotBlank(this.getTitle());
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        final JSONObject result = new JSONObject();
+        final JSONObject action = new JSONObject();
+        final JSONArray actionParams = new JSONArray();
+
+        result.put("title", this.getTitle());
+        result.put("description", this.getDescription());
+
+        action.put("actionURI", this.getActionURI());
+        action.put("method", this.getActionMethod());
+        action.put("target", this.getActionTarget());
+        action.put("xhr", this.isActionAsynchronous());
+
+        for(final Map.Entry<String, String> param : this.getActionParams().entrySet()) {
+            actionParams.put(new JSONObject().put(param.getKey(), param.getValue()));
+        }
+
+        action.put("params", actionParams);
+
+        result.put("action", action);
+
+        return result;
+    }
+
+    // Mixin methods
+
+    protected String findPageTitle(final Resource resource) {
         final PageManager pageManager = resource.getResourceResolver().adaptTo(PageManager.class);
         final Page page = pageManager.getContainingPage(resource);
 
@@ -62,7 +134,7 @@ public abstract class AbstractResult implements Result {
         }
     }
 
-    protected String getAssetTitle(final Resource resource) {
+    protected String findAssetTitle(final Resource resource) {
         if(DamUtil.isAsset(resource)) {
             return TextUtil.getFirstNonEmpty(
                     DamUtil.resolveToAsset(resource).getMetadataValue("dc:title"),
@@ -70,24 +142,5 @@ public abstract class AbstractResult implements Result {
         } else {
             return resource.getName();
         }
-    }
-
-    public Map<String, String> toMap() throws IllegalStateException {
-        final Map<String, String> map = new HashMap<String, String>();
-
-        if (StringUtils.isBlank(this.title)) {
-            log.warn("Result title must have a value");
-            return map;
-        }
-
-        map.put("title", StringUtils.strip(this.title));
-        map.put("description", StringUtils.stripToEmpty(this.description));
-        map.put("action", StringUtils.stripToEmpty(this.actionURI));
-
-        return map;
-    }
-
-    public JSONObject toJSON() throws JSONException {
-        return new JSONObject(this.toMap());
     }
 }
