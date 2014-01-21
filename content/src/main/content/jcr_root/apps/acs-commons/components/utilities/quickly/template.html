@@ -12,7 +12,8 @@
                 <input id="acs-commons-quickly-cmd" ng-model="data.cmd" class="quickly-cmd" type="text"/>
             </div>
 
-            <ul class="quickly-results">
+            <ul class="quickly-results"
+                    ng-show="data.results">
                 <li ng-repeat="result in data.results"
                      ng-click="app.selectResult(result)"
                      ng-class="{selected: result.selected}"
