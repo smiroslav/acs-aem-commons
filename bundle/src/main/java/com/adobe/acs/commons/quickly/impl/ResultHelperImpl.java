@@ -64,7 +64,11 @@ public class ResultHelperImpl implements ResultHelper {
 
         Resource parent = resourceResolver.getResource(path);
         if (parent == null) {
-            parent = resourceResolver.getResource(StringUtils.substringBeforeLast(path, "/"));
+            String parentPath = StringUtils.substringBeforeLast(path, "/");
+            if(StringUtils.isBlank(parentPath)) {
+                parentPath = "/";
+            }
+            parent = resourceResolver.getResource(parentPath);
         }
 
         if (parent != null) {
