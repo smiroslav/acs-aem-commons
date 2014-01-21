@@ -29,8 +29,9 @@ $(function() {
         var elementId = 'acs-commons-quickly-ctrl';
 
         console.log(e.which);
-        // shift-ctrl-space
+        // ctrl-space (Chrome/Safari)
         if((e.ctrlKey && e.which === 0)
+            // shift-ctrl-space (FF)
             || (e.shiftKey && e.ctrlKey && e.which === 64)){
             angular.element(document.getElementById(elementId)).scope().app.toggle();
             angular.element(document.getElementById(elementId)).scope().$apply();
