@@ -20,22 +20,22 @@
 
 package com.adobe.acs.commons.quickly.commands.impl.crxde;
 
-import com.adobe.acs.commons.quickly.AbstractResult;
+import com.adobe.acs.commons.quickly.BasicResult;
 import org.apache.sling.api.resource.Resource;
 
-public class CRXDEResult extends AbstractResult {
+public class CRXDEResult extends BasicResult {
     public CRXDEResult() {
-        this.title = "CRXDE Lite";
-        this.description = "/crx/de/index.jsp";
-        this.actionURI = "/crx/de/index.jsp";
-        this.actionTarget = "_blank";
+        this.setTitle("CRXDE Lite");
+        this.setDescription("/crx/de/index.jsp");
+        this.setActionURI("/crx/de/index.jsp");
+        this.setActionTarget("_blank");
     }
 
     public CRXDEResult(final Resource resource) {
-        this.title = resource.getName();
-        this.description = resource.getPath();
-        this.actionURI = "/crx/de/index.jsp#" + resource.getPath();
-        this.actionTarget = "_blank";
+        this.setTitle(resource.getName());
+        this.setDescription(resource.getPath());
+        this.setActionURI("/crx/de/index.jsp#" + resource.getPath());
+        this.setActionTarget("_blank");
     }
 
     public static boolean accepts(final Resource resource) {

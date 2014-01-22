@@ -35,16 +35,30 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractResult implements Result {
-    private static final Logger log = LoggerFactory.getLogger(AbstractResult.class);
+public class BasicResult implements Result {
+    private static final Logger log = LoggerFactory.getLogger(BasicResult.class);
 
-    protected String title;
-    protected String description;
-    protected String actionURI;
-    protected String actionMethod;
-    protected String actionTarget;
-    protected boolean actionAsynchronous = false;
-    protected Map<String, String> actionParams;
+    private static final String DEFAULT_ACTION_URI = "#";
+    private static final String DEFAULT_ACTION_METHOD = "get";
+    private static final String DEFAULT_ACTION_TARGET = "_top";
+
+    private String title;
+    private String description;
+    private String actionURI;
+    private String actionMethod;
+    private String actionTarget;
+    private boolean actionAsynchronous = false;
+    private Map<String, String> actionParams;
+
+    public BasicResult() {
+
+    }
+
+    public BasicResult(final String title, final String description, final String actionURI) {
+        this.setTitle(title);
+        this.setDescription(description);
+        this.setActionURI(actionURI);
+    }
 
     public String getTitle() {
         return StringUtils.stripToNull(this.title);
@@ -57,7 +71,7 @@ public abstract class AbstractResult implements Result {
     @Override
     public String getActionURI() {
         if(StringUtils.isBlank(this.actionURI)) {
-            return "#";
+            return DEFAULT_ACTION_URI;
         } else {
             return this.actionURI;
         }
@@ -66,7 +80,7 @@ public abstract class AbstractResult implements Result {
     @Override
     public String getActionMethod() {
         if(StringUtils.isBlank(this.actionMethod)) {
-            return "get";
+            return DEFAULT_ACTION_METHOD;
         } else {
             return this.actionMethod;
         }
@@ -75,7 +89,7 @@ public abstract class AbstractResult implements Result {
     @Override
     public String getActionTarget() {
         if(StringUtils.isBlank(this.actionTarget)) {
-            return "_top";
+            return DEFAULT_ACTION_TARGET;
         } else {
             return this.actionTarget;
         }     }
@@ -87,6 +101,34 @@ public abstract class AbstractResult implements Result {
         } else {
             return actionParams;
         }
+    }
+
+    public void setTitle(final String title) {
+        this.title = title;
+    }
+
+    public void setDescription(final String description) {
+        this.description = description;
+    }
+
+    public void setActionURI(final String actionURI) {
+        this.actionURI = actionURI;
+    }
+
+    public void setActionMethod(final String actionMethod) {
+        this.actionMethod = actionMethod;
+    }
+
+    public void setActionTarget(final String actionTarget) {
+        this.actionTarget = actionTarget;
+    }
+
+    public void setActionAsynchronous(final boolean actionAsynchronous) {
+        this.actionAsynchronous = actionAsynchronous;
+    }
+
+    public void setActionParams(final Map<String, String> actionParams) {
+        this.actionParams = actionParams;
     }
 
     public boolean isActionAsynchronous() {
@@ -105,6 +147,7 @@ public abstract class AbstractResult implements Result {
         result.put("title", this.getTitle());
         result.put("description", this.getDescription());
 
+        // Action
         action.put("actionURI", this.getActionURI());
         action.put("method", this.getActionMethod());
         action.put("target", this.getActionTarget());
@@ -115,7 +158,6 @@ public abstract class AbstractResult implements Result {
         }
 
         action.put("params", actionParams);
-
         result.put("action", action);
 
         return result;

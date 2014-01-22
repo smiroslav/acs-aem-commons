@@ -20,28 +20,28 @@
 
 package com.adobe.acs.commons.quickly.commands.impl.open;
 
-import com.adobe.acs.commons.quickly.AbstractResult;
+import com.adobe.acs.commons.quickly.BasicResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
-public class OpenResult extends AbstractResult {
+public class OpenResult extends BasicResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
 
     public OpenResult(final Resource resource) {
         final String path = resource.getPath();
 
         if (StringUtils.startsWith(path, "/content/dam")) {
-            this.title = findAssetTitle(resource);
-            this.actionURI = "/damadmin#" + path;
+            this.setTitle(findAssetTitle(resource));
+            this.setActionURI("/damadmin#" + path);
         } else if (StringUtils.startsWith(path, "/content")) {
-            this.title = findPageTitle(resource);
-            this.actionURI = "/cf#" + path + ".html";
+            this.setTitle(findPageTitle(resource));
+            this.setActionURI("/cf#" + path + ".html");
         } else if (StringUtils.startsWith(path, "/etc")) {
-            this.title = findPageTitle(resource);
-            this.actionURI = path + ".html";
+            this.setTitle(findPageTitle(resource));
+            this.setActionURI(path + ".html");
         }
 
-        this.description = path;
+        this.setDescription(path);
     }
 
     public static boolean accepts(final Resource resource) {

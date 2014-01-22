@@ -104,15 +104,14 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
         DEFAULT_RESULTS.add(new GoResult("wcm", "Web page administration", "/siteadmin"));
         DEFAULT_RESULTS.add(new GoResult("dam", "DAM administration", "/damadmin"));
-        DEFAULT_RESULTS.add(new GoResult("tools", "AEM Tools", "/miscadmin"));
         DEFAULT_RESULTS.add(new GoResult("tags", "Tag administration", "/tagging"));
         DEFAULT_RESULTS.add(new GoResult("wf", "Workflow administration", "/libs/cq/workflow/content/console.html"));
+        DEFAULT_RESULTS.add(new GoResult("tools", "AEM Tools", "/miscadmin"));
         DEFAULT_RESULTS.add(new GoResult("inbox", "My Inbox", "/inbox"));
         DEFAULT_RESULTS.add(new GoResult("users", "User and Group administration", "/useradmin"));
-        DEFAULT_RESULTS.add(new GoResult("crxde", "CRXDe Lite", "/crxde"));
         DEFAULT_RESULTS.add(new GoResult("campaigns", "Campaign administration", "/mcmadmin"));
         DEFAULT_RESULTS.add(new GoResult("soco", "Soco administration", "/socoadmin"));
+        DEFAULT_RESULTS.add(new GoResult("crxde", "CRXDE Lite", "/crxde"));
         DEFAULT_RESULTS.add(new GoResult("pack", "CRX package manager", "/crx/packmgr"));
-
     }
 }
