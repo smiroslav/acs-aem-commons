@@ -19,30 +19,6 @@
  */
 /*global quickly: false, angular: false */
 
-
-quickly.ui = {};
-quickly.ui.scrollResults = function() {
-
-    var container = $('#acs-commons-quickly-app .quickly-results'),
-        selected = $('#acs-commons-quickly-app .quickly-result.selected'),
-
-        containerHeight = container.height(),
-        containerTop = container.scrollTop(),
-        containerBottom = containerTop + containerHeight,
-
-        selectedHeight = selected.outerHeight(true),
-        selectedTop = selected.offset().top - container.offset().top + containerTop,
-        selectedBottom = selectedTop + selectedHeight;
-
-    if(selectedBottom > containerBottom) {
-        // Scroll down
-        container.scrollTop(selectedTop + selectedHeight - containerHeight);
-    } else if(selectedTop < containerTop) {
-        // Scroll Up
-        container.scrollTop(containerTop - selectedHeight);
-    }
-};
-
 quickly.directive('ngEnter', function () {
     return function (scope, element, attrs) {
         element.bind("keydown keypress", function (event) {
@@ -72,7 +48,7 @@ quickly.directive('ngUp', function () {
                     scope.$eval(attrs.ngUp);
                 });
 
-                quickly.ui.scrollResults();
+                scope.ui.scrollResults();
 
                 event.preventDefault();
             }
@@ -88,7 +64,7 @@ quickly.directive('ngDown', function () {
                     scope.$eval(attrs.ngDown);
                 });
 
-                quickly.ui.scrollResults();
+                scope.ui.scrollResults();
 
                 event.preventDefault();
             }

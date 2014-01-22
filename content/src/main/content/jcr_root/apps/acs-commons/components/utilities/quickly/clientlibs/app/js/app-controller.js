@@ -35,7 +35,6 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
         resetOnToggle: true,
         visible: false
     };
-    $scope.util = {};
 
     /* Watchers */
     $scope.$watch('data.cmd', function(newValue, oldValue) {
@@ -69,6 +68,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
 
             if($scope.data.results && $scope.data.results[0]) {
                 $scope.data.results[0].selected = true;
+                $scope.ui.resetResultScroll();
             }
         });
     };
@@ -79,9 +79,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
             $scope.data.results = [];
         }
         $scope.app.visible = !$scope.app.visible;
-        setTimeout(function() {
-            angular.element('#acs-commons-quickly-cmd').focus();
-        }, 0);
+        $scope.ui.focusCommand();
     };
 
     $scope.app.selectUp = function() {
@@ -109,19 +107,15 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
     };
 
     $scope.app.processAction = function(result) {
-        var form,
-            formWrapper = angular.element('#quickly-result-form');
-
         if($scope.app.visible) {
-            form = angular.element($scope.util.buildFormHTML(result.action));
-            formWrapper.html('').append(form);
-            form.submit();
+            $scope.ui.createForm(result.action).submit();
             $scope.app.visible = false;
         }
     };
 
 
     /* Util Methods */
+    $scope.util = {};
 
     $scope.util.select = function(result) {
         var i = 0;
@@ -157,5 +151,48 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
         html += '</form>';
 
         return html;
+    };
+
+    /* UI Methods */
+    $scope.ui = {};
+
+    $scope.ui.focusCommand = function() {
+        setTimeout(function() {
+            angular.element('#acs-commons-quickly-cmd').focus();
+        }, 0);
+    };
+
+    $scope.ui.createForm = function(action) {
+        var formWrapper = angular.element('#quickly-result-form'),
+            form = angular.element($scope.util.buildFormHTML(action));
+
+        formWrapper.html('').append(form);
+
+        return form;
+    };
+
+    $scope.ui.resetResultScroll = function() {
+        $('#acs-commons-quickly-app .quickly-results').scrollTop(0);
+    };
+
+    $scope.ui.scrollResults = function() {
+        var container = $('#acs-commons-quickly-app .quickly-results'),
+            selected = $('#acs-commons-quickly-app .quickly-result.selected'),
+
+            containerHeight = container.height(),
+            containerTop = container.scrollTop(),
+            containerBottom = containerTop + containerHeight,
+
+            selectedHeight = selected.outerHeight(true),
+            selectedTop = selected.offset().top - container.offset().top + containerTop,
+            selectedBottom = selectedTop + selectedHeight;
+
+        if(selectedBottom > containerBottom) {
+            // Scroll down
+            container.scrollTop(selectedTop + selectedHeight - containerHeight);
+        } else if(selectedTop < containerTop) {
+            // Scroll Up
+            container.scrollTop(containerTop - selectedHeight);
+        }
     };
 }]);
