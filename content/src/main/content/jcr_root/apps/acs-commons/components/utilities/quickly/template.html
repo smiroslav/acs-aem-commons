@@ -23,16 +23,7 @@
                 </li>
             </ul>
 
-            <form id="quickly-result-form"
-                  ng-model="data.form"
-                  action="{{data.form.actionURI}}"
-                  method="{{data.form.method}}"
-                  target="{{data.form.target}}">
-                <input ng-repeat="param in (data.form.params || [])"
-                       name="{{param.name}}"
-                       value="{{param.value}}"
-                       type="hidden"/>
-            </form>
+            <div id="quickly-result-form"></div>
         </div>
     </div>
 </div>

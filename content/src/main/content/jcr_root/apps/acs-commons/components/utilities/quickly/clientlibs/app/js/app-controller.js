@@ -24,13 +24,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
 
     /* Data/Models */
     $scope.data = {
-        cmd: "",
-        form: {
-            actionURI: '#',
-            method: 'get',
-            target: '_self',
-            params: []
-        },
+        cmd: '',
         results: []
     };
 
@@ -54,15 +48,6 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
                 $scope.app.keyStrokes = $scope.app.keyStrokes + 1;
                 $scope.app.timeout = setTimeout(function() { $scope.app.getResults(); }, 300);
             }
-        }
-    });
-
-    $scope.$watch('data.form', function(newValue, oldValue) {
-        if($scope.app.visible) {
-            setTimeout(function() {
-                angular.element('#quickly-result-form').submit();
-            }, 100);
-            $scope.app.visible = false;
         }
     });
 
@@ -94,7 +79,9 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
             $scope.data.results = [];
         }
         $scope.app.visible = !$scope.app.visible;
-        setTimeout(function(){document.getElementById('acs-commons-quickly-cmd').focus();} ,0);
+        setTimeout(function() {
+            angular.element('#acs-commons-quickly-cmd').focus();
+        }, 0);
     };
 
     $scope.app.selectUp = function() {
@@ -122,8 +109,15 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
     };
 
     $scope.app.processAction = function(result) {
-        // Actual form submission happens in the watcher for data.form
-        $scope.data.form = result.action;
+        var form,
+            formWrapper = angular.element('#quickly-result-form');
+
+        if($scope.app.visible) {
+            form = angular.element($scope.util.buildFormHTML(result.action));
+            formWrapper.html('').append(form);
+            form.submit();
+            $scope.app.visible = false;
+        }
     };
 
 
@@ -147,5 +141,21 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
         }
 
         return 0;
+    };
+
+    $scope.util.buildFormHTML = function(action) {
+        var params = action.params || [],
+            html = '<form';
+            html += ' action="' + (action.actionURI || '#') + '"';
+            html += ' method="' + (action.method || 'get') + '"';
+            html += ' target="' + (action.target || '_top') + '">';
+
+        angular.forEach(params, function(value, key) {
+            html += '<input type="hidden" name="' + key + '" value="' + value + '"/>';
+        }, this);
+
+        html += '</form>';
+
+        return html;
     };
 }]);

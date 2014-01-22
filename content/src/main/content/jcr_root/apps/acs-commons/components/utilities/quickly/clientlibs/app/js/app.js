@@ -28,7 +28,6 @@ $(function() {
     $('body').keypress(function(e){
         var elementId = 'acs-commons-quickly-ctrl';
 
-        console.log(e.which);
         // ctrl-space (Chrome/Safari)
         if((e.ctrlKey && e.which === 0)
             // shift-ctrl-space (FF)
