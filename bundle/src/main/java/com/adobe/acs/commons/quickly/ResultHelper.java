@@ -26,11 +26,15 @@ import org.apache.sling.api.resource.ResourceResolver;
 import java.util.List;
 
 public interface ResultHelper {
+    public static final int DEFAULT_QUERY_LIMIT = 100;
+
     Resource matchFullPath(ResourceResolver resourceResolver, String path);
 
     List<Resource> startsWith(ResourceResolver resourceResolver, String path);
 
-    List<Resource> matchPathFragment(ResourceResolver resourceResolver, String pathFragment, String... nodeType);
+    List<Resource> findByPathFragment(ResourceResolver resourceResolver, String pathFragment,
+                                     int limit, String... nodeType);
 
-    List<Resource> matchNodeName(ResourceResolver resourceResolver, String path, String... nodeTypes);
+    List<Resource> findByName(ResourceResolver resourceResolver, String path, boolean strict,
+                              int limit, String... nodeTypes);
 }

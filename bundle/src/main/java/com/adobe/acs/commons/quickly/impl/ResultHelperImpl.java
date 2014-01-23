@@ -27,21 +27,20 @@ import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.search.result.Hit;
 import com.day.cq.search.result.SearchResult;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -87,9 +86,7 @@ public class ResultHelperImpl implements ResultHelper {
         }
 
         if (parent != null) {
-            final Iterator<Resource> children = parent.listChildren();
-            while (children.hasNext()) {
-                final Resource child = children.next();
+            for(final Resource child : parent.getChildren()) {
                 if (StringUtils.startsWith(child.getPath(), path)) {
                     if(this.isValidResource(child)) {
                         results.add(child);
@@ -103,9 +100,14 @@ public class ResultHelperImpl implements ResultHelper {
 
 
     @Override
-    public List<Resource> matchPathFragment(final ResourceResolver resourceResolver, final String pathFragment,
-                                            final String... nodeTypes) {
+    public List<Resource> findByPathFragment(final ResourceResolver resourceResolver, final String pathFragment,
+                                             final int limit, final String... nodeTypes) {
         final List<Resource> results = new LinkedList<Resource>();
+
+        if(StringUtils.startsWith(pathFragment, "/")) {
+            // Only handle things that DONT look like absolute paths
+            return results;
+        }
 
         final String[] segments = StringUtils.split(pathFragment, "/");
         if(segments.length == 0) {
@@ -113,17 +115,31 @@ public class ResultHelperImpl implements ResultHelper {
             return results;
         }
 
-        final List<Resource> fragmentRoots = this.matchNodeName(resourceResolver, segments[0], "nt:base");
+        final List<Resource> fragmentRoots = this.findByName(resourceResolver,
+                segments[0], (segments.length > 1), limit, JcrConstants.NT_BASE);
+
         if(segments.length == 1) {
             // Single path segment; find anything that matches this nodeName*
-            return fragmentRoots;
+            return this.getChildrenResults(true, fragmentRoots, null);
         }
+
+        final String relUltimatePath = StringUtils.join(segments, "/", 1, segments.length);
+
+        results.addAll(this.getChildrenResults(true, fragmentRoots, relUltimatePath));
+        if(!results.isEmpty()) {
+            return results;
+        }
+
+
+
+
 
         // Atleast 2 segments; full-node-name/../possible-fragment
 
         // Get the middle path segments excluding the first and the last
         // This should be a valid relPath from the any matching 0th resource
         // The last segment could be a fragment though
+
         final String relPenultimatePath = StringUtils.join(segments, "/", 1, segments.length - 1);
 
         // The last segment is always considered a fragment
@@ -134,7 +150,7 @@ public class ResultHelperImpl implements ResultHelper {
 
             if(penultimateResource != null) {
                 for(final Resource child : penultimateResource.getChildren()) {
-                    if(this.isValidFragmentResource(fragment, child, nodeTypes)) {
+                    if(this.isValidFragmentResource(fragment, child)) {
                         results.add(child);
                     }
                 }
@@ -144,18 +160,10 @@ public class ResultHelperImpl implements ResultHelper {
         return results;
     }
 
-    private boolean isValidFragmentResource(final String fragmentSegment, final Resource resource,
-                                            final String[] nodeTypes) {
-        if(StringUtils.startsWith(resource.getName(), fragmentSegment)) {
-            if(ArrayUtils.isEmpty(nodeTypes)) {
-                return true;
-            }
+    private boolean isValidFragmentResource(final String fragmentSegment, final Resource resource) {
 
-            for(final String nodeType :nodeTypes) {
-                if(ResourceUtil.isA(resource, nodeType)) {
-                    return true;
-                }
-            }
+        if(StringUtils.startsWith(resource.getName(), fragmentSegment)) {
+            return true;
         }
 
         return false;
@@ -163,8 +171,8 @@ public class ResultHelperImpl implements ResultHelper {
 
 
     @Override
-    public List<Resource> matchNodeName(final ResourceResolver resourceResolver, final String nodeName,
-                                        String... nodeTypes) {
+    public List<Resource> findByName(final ResourceResolver resourceResolver, final String nodeName,
+                                     final boolean strict, final int limit, String... nodeTypes) {
         final List<Resource> results = new LinkedList<Resource>();
         final Map<String, String> map = new HashMap<String, String>();
 
@@ -176,8 +184,13 @@ public class ResultHelperImpl implements ResultHelper {
             }
         }
 
-        map.put("nodename", nodeName + "*");
-        map.put("p.limit", "100");
+        if(strict) {
+            map.put("nodename", nodeName);
+        } else {
+            map.put("nodename", nodeName + "*");
+        }
+
+        map.put("p.limit", String.valueOf(limit));
 
         final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
                 resourceResolver.adaptTo(Session.class));
@@ -199,12 +212,41 @@ public class ResultHelperImpl implements ResultHelper {
 
 
     public boolean isValidResource(final Resource resource) {
-        final String path = resource.getPath();
+        return !StringUtils.startsWithAny(resource.getPath(), PATH_PREFIX_BLACKLIST);
+    }
 
-        if(StringUtils.startsWithAny(path, PATH_PREFIX_BLACKLIST)) {
-            return false;
+
+    public List<Resource> getChildrenResults(final boolean includeParent, final Resource parent,
+                                             final String relPath) {
+        final List<Resource> results = new LinkedList<Resource>();
+        Resource relParent = parent;
+        if(!StringUtils.isBlank(relPath)) {
+            relParent = parent.getChild(relPath);
         }
 
-        return true;
+        if(relParent == null) {
+            return results;
+        }
+
+        if(includeParent) {
+            results.add(relParent);
+        }
+
+        for(final Resource child : relParent.getChildren()) {
+            results.add(child);
+        }
+
+        return results;
+    }
+
+    public List<Resource> getChildrenResults(final boolean includeParents, final Collection<Resource> parents,
+                                             final String relPath) {
+        final List<Resource> results = new LinkedList<Resource>();
+
+        for(final Resource parent : parents) {
+            results.addAll(this.getChildrenResults(includeParents, parent, relPath));
+        }
+
+        return results;
     }
 }

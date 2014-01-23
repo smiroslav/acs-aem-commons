@@ -24,8 +24,12 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.results.CRXDEResult;
+import com.adobe.acs.commons.quickly.results.GoResult;
 import com.adobe.acs.commons.quickly.results.OpenResult;
+import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.QueryBuilder;
+import com.day.cq.wcm.api.NameConstants;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -78,8 +82,23 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new LinkedList<Result>();
 
-        final List<Resource> matchedResources = resultHelper.matchPathFragment(resourceResolver, cmd.getParam(),
-                "cq:Page", "dam:Asset");
+
+        final Resource paramResource = resultHelper.matchFullPath(resourceResolver, cmd.getParam());;
+        if(paramResource != null) {
+            results.add(new GoResult(paramResource));
+        }
+
+        final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
+        for(final Resource startsWithResource : startsWithResources) {
+            if(CRXDEResult.accepts(startsWithResource)) {
+                results.add(new GoResult(startsWithResource));
+            }
+        }
+
+        final List<Resource> matchedResources = resultHelper.findByPathFragment(resourceResolver,
+                cmd.getParam(),
+                ResultHelper.DEFAULT_QUERY_LIMIT,
+                NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
 
         for(final Resource matchedResource : matchedResources) {
             if(OpenResult.accepts(matchedResource)) {

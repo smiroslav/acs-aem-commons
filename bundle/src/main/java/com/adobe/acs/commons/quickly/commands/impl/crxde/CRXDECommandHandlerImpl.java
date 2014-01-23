@@ -84,14 +84,15 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
         }
 
         final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
-        for(final Resource startswithResource : startsWithResources) {
-            if(CRXDEResult.accepts(startswithResource)) {
-                results.add(new CRXDEResult(startswithResource));
+        for(final Resource startsWithResource : startsWithResources) {
+            if(CRXDEResult.accepts(startsWithResource)) {
+                results.add(new CRXDEResult(startsWithResource));
             }
         }
 
         if(results.isEmpty()) {
-            final List<Resource> matchedResources = resultHelper.matchPathFragment(resourceResolver, cmd.getParam());
+            final List<Resource> matchedResources = resultHelper.findByPathFragment(resourceResolver, cmd.getParam(),
+                    ResultHelper.DEFAULT_QUERY_LIMIT);
             for(final Resource matchedResource : matchedResources) {
                 if(CRXDEResult.accepts(matchedResource)) {
                     results.add(new CRXDEResult(matchedResource));
