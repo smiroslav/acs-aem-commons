@@ -24,6 +24,7 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.results.OpenResult;
 import com.day.cq.search.QueryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -31,6 +32,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
@@ -62,22 +64,22 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
     private ResultHelper resultHelper;
 
     @Override
-    public boolean accepts(final ResourceResolver resourceResolver, final Command cmd) {
+    public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
         return StringUtils.equalsIgnoreCase(CMD, cmd.getOp());
     }
 
     @Override
-    protected List<Result> withoutParams(final ResourceResolver resourceResolver, final Command cmd) {
-        return new LinkedList<Result>();
+    protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        return EMPTY_RESULTS;
     }
 
     @Override
-    protected List<Result> withParams(final ResourceResolver resourceResolver,
-                                      final Command cmd) {
+    protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new LinkedList<Result>();
 
-        final List<Resource> matchedResources = resultHelper.matchNodeName(resourceResolver, cmd.getParam(),
-                "cq:Page", 25);
+        final List<Resource> matchedResources = resultHelper.matchPathFragment(resourceResolver, cmd.getParam(),
+                "cq:Page", "dam:Asset");
 
         for(final Resource matchedResource : matchedResources) {
             if(OpenResult.accepts(matchedResource)) {

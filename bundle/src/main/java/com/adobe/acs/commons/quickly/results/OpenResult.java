@@ -18,14 +18,14 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl.open;
+package com.adobe.acs.commons.quickly.results;
 
-import com.adobe.acs.commons.quickly.BasicResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
 public class OpenResult extends BasicResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
+    private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content" };
 
     public OpenResult(final Resource resource) {
         final String path = resource.getPath();
@@ -46,6 +46,17 @@ public class OpenResult extends BasicResult {
 
     public static boolean accepts(final Resource resource) {
         final String path = resource.getPath();
-        return StringUtils.startsWithAny(path, ACCEPT_PREFIXES);
+
+        if(!StringUtils.startsWithAny(path, ACCEPT_PREFIXES)) {
+            return false;
+        }
+
+        for(final String rejectPathSegment : REJECT_PATH_SEGMENTS) {
+            if(StringUtils.contains(path, rejectPathSegment)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

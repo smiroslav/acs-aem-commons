@@ -25,5 +25,5 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
 public interface QuicklyEngine {
-    JSONObject execute(SlingHttpServletRequest request, Command cmd) throws JSONException;
+    JSONObject execute(SlingHttpServletRequest slingRequest, Command cmd) throws JSONException;
 }

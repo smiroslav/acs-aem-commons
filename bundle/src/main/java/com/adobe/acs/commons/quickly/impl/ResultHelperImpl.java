@@ -27,6 +27,7 @@ import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.search.result.Hit;
 import com.day.cq.search.result.SearchResult;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -34,6 +35,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +52,15 @@ import java.util.Map;
 public class ResultHelperImpl implements ResultHelper {
     private static final Logger log = LoggerFactory.getLogger(ResultHelperImpl.class);
 
+    private static final String[] PATH_PREFIX_BLACKLIST = new String[]{
+            "/var",
+            "/jcr:system",
+            "/tmp",
+            "/index",
+            "/login",
+            "/system"
+    };
+
     @Reference
     private QueryBuilder queryBuilder;
 
@@ -61,6 +72,11 @@ public class ResultHelperImpl implements ResultHelper {
     @Override
     public List<Resource> startsWith(final ResourceResolver resourceResolver, final String path) {
         List<Resource> results = new LinkedList<Resource>();
+
+        if(!StringUtils.startsWith(path, "/")) {
+            // Only handle things that look like absolute paths
+            return results;
+        }
 
         Resource parent = resourceResolver.getResource(path);
         if (parent == null) {
@@ -76,7 +92,9 @@ public class ResultHelperImpl implements ResultHelper {
             while (children.hasNext()) {
                 final Resource child = children.next();
                 if (StringUtils.startsWith(child.getPath(), path)) {
-                    results.add(child);
+                    if(this.isValidResource(child)) {
+                        results.add(child);
+                    }
                 }
             }
         }
@@ -84,9 +102,64 @@ public class ResultHelperImpl implements ResultHelper {
         return results;
     }
 
+
     @Override
-    public List<Resource> matchNodeName(final ResourceResolver resourceResolver, final String path, String nodeType,
-                                        int limit) {
+    public List<Resource> matchPathFragment(final ResourceResolver resourceResolver, final String pathFragment,
+                                            final String... nodeTypes) {
+        final List<Resource> results = new LinkedList<Resource>();
+
+        final String[] segments = StringUtils.split(pathFragment, "/");
+        if(segments.length == 0) {
+            // Empty input; empty results
+            return results;
+        }
+
+        final List<Resource> fragmentRoots = this.matchNodeName(resourceResolver, segments[0], "nt:base");
+        if(segments.length == 1) {
+            // Single path segment; find anything that matches this nodeName*
+            return fragmentRoots;
+        }
+
+        // Atleast 2 segments; full-node-name/../possible-fragment
+
+        // Get the middle path segments excluding the first and the last
+        // This should be a valid relPath from the any matching 0th resource
+        // The last segment could be a fragment though
+        final String relPenultimatePath = StringUtils.join(segments, "/", 1, segments.length - 1);
+
+        // The last segment is always considered a fragment
+        final String fragment = segments[segments.length - 1];
+
+        for(final Resource fragmentRoot : fragmentRoots) {
+            final Resource penultimateResource = fragmentRoot.getChild(relPenultimatePath);
+
+            if(penultimateResource != null) {
+                for(final Resource child : penultimateResource.getChildren()) {
+                    if(this.isValidFragmentResource(fragment, child, nodeTypes)) {
+                        results.add(child);
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private boolean isValidFragmentResource(final String fragmentSegment, final Resource child, final String[] nodeTypes) {
+        if(StringUtils.startsWith(child.getName(), fragmentSegment)) {
+            final ValueMap properties = child.adaptTo(ValueMap.class);
+            final String primaryType = properties.get(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_BASE);
+
+            return (ArrayUtils.isEmpty(nodeTypes) || ArrayUtils.contains(nodeTypes, primaryType));
+        }
+
+        return false;
+    }
+
+
+    @Override
+    public List<Resource> matchNodeName(final ResourceResolver resourceResolver, final String nodeName,
+                                        String nodeType) {
         final List<Resource> results = new LinkedList<Resource>();
         final Map<String, String> map = new HashMap<String, String>();
 
@@ -95,8 +168,8 @@ public class ResultHelperImpl implements ResultHelper {
         }
 
         map.put("type", nodeType);
-        map.put("nodename", path + "*");
-        map.put("p.limit", String.valueOf(limit));
+        map.put("nodename", nodeName + "*");
+        map.put("p.limit", "100");
 
         final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
                 resourceResolver.adaptTo(Session.class));
@@ -104,12 +177,26 @@ public class ResultHelperImpl implements ResultHelper {
 
         for (final Hit hit : result.getHits()) {
             try {
-                results.add(hit.getResource());
+                final Resource resource = hit.getResource();
+                if(this.isValidResource(resource)) {
+                    results.add(resource);
+                }
             } catch (RepositoryException e) {
                 log.error("Could not access repository for hit: {}. Lucene index may be out of sync.", hit);
             }
         }
 
         return results;
+    }
+
+
+    public boolean isValidResource(final Resource resource) {
+        final String path = resource.getPath();
+
+        if(StringUtils.startsWithAny(path, PATH_PREFIX_BLACKLIST)) {
+            return false;
+        }
+
+        return true;
     }
 }

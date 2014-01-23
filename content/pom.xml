@@ -82,6 +82,7 @@
                     <excludes>
                         <exclude>**/extensions/**/*.js</exclude>
                         <exclude>**/etc/clientlibs/acs-commons/angularjs/**/*.js</exclude>
+                        <exclude>**/etc/clientlibs/acs-commons/json2/**/*.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>

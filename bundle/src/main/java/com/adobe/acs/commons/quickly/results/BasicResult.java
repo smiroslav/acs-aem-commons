@@ -18,8 +18,9 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly;
+package com.adobe.acs.commons.quickly.results;
 
+import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.util.TextUtil;
 import com.day.cq.dam.commons.util.DamUtil;
 import com.day.cq.wcm.api.Page;

@@ -24,6 +24,7 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.results.GoResult;
 import com.day.cq.search.QueryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
@@ -32,6 +33,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
@@ -59,6 +61,7 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
     private static List<Result> DEFAULT_RESULTS;
 
+
     @Reference
     private QueryBuilder queryBuilder;
 
@@ -66,18 +69,18 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
     private ResultHelper resultHelper;
 
     @Override
-    public boolean accepts(final ResourceResolver resourceResolver, final Command cmd) {
+    public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
         return StringUtils.equalsIgnoreCase(CMD, cmd.getOp());
     }
 
     @Override
-    protected List<Result> withoutParams(final ResourceResolver resourceResolver, final Command cmd) {
+    protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         return DEFAULT_RESULTS;
     }
 
     @Override
-    protected List<Result> withParams(final ResourceResolver resourceResolver,
-                                      final Command cmd) {
+    protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new LinkedList<Result>();
 
         for(final Result result : DEFAULT_RESULTS) {
@@ -86,8 +89,8 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
             }
         }
 
-        final List<Resource> resources = resultHelper.matchNodeName(resourceResolver,
-                cmd.getParam(), "cq:Page", 50);
+        final List<Resource> resources = resultHelper.matchPathFragment(resourceResolver,
+                cmd.getParam(), "cq:Page");
 
         for (final Resource resource : resources) {
             if(GoResult.accepts(resource)) {

@@ -20,7 +20,7 @@
 
 /*global quickly: false, angular: false, console: false */
 
-quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scope, $http, $timeout){
+quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', function($scope, $http, $timeout, $cookies){
 
     /* Data/Models */
     $scope.data = {
@@ -31,6 +31,8 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
     /* Method namespaces */
     $scope.app = {
         timeout: 0,
+        timeoutThrottle: 400,
+        keyStrokeThrottle: 3,
         keyStrokes: 0,
         resetOnToggle: true,
         visible: false
@@ -40,12 +42,12 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
     $scope.$watch('data.cmd', function(newValue, oldValue) {
         if($scope.app.visible) {
             clearTimeout($scope.app.timeout);
-            if($scope.app.keyStrokes >= 2) {
+            if($scope.app.keyStrokes >= $scope.app.keyStrokeThrottle) {
                 $scope.app.keyStrokes = 0;
                 $scope.app.getResults();
             } else {
                 $scope.app.keyStrokes = $scope.app.keyStrokes + 1;
-                $scope.app.timeout = setTimeout(function() { $scope.app.getResults(); }, 300);
+                $scope.app.timeout = setTimeout(function() { $scope.app.getResults(); }, $scope.app.keyStrokeThrottle);
             }
         }
     });
@@ -195,4 +197,29 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', function($scop
             container.scrollTop(containerTop - selectedHeight);
         }
     };
+
+
+    /* Command Supprt */
+    $scope.cmd = {};
+
+    $scope.cmd.back = function() {
+        var cookie = $cookies.quicklyBackCmd || '[]',
+            history = JSON.parse(cookie);
+
+        history.unshift({title: document.title, path: window.location.href});
+
+        if(history.length > 25) {
+            history.pop();
+        }
+
+        $cookies.quicklyBackCmd = JSON.stringify(history);
+    };
+
+    /* Initiatialization */
+
+    var init = function() {
+        $scope.cmd.back();
+    };
+
+    init();
 }]);

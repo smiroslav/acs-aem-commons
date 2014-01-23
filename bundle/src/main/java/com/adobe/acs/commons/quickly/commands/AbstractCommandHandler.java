@@ -23,13 +23,14 @@ package com.adobe.acs.commons.quickly.commands;
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import org.apache.commons.lang.StringUtils;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AbstractCommandHandler implements CommandHandler {
@@ -37,15 +38,17 @@ public abstract class AbstractCommandHandler implements CommandHandler {
 
     private static String KEY_RESULTS = "results";
 
+    public static final List<Result> EMPTY_RESULTS = new LinkedList<Result>();
+
     @Override
-    public JSONObject getResults(final ResourceResolver resourceResolver, final Command cmd) throws JSONException {
+    public JSONObject getResults(final SlingHttpServletRequest slingRequest, final Command cmd) throws JSONException {
         final JSONObject json = new JSONObject();
         final List<Result> results;
 
         if (StringUtils.isBlank(cmd.getParam())) {
-            results = this.withoutParams(resourceResolver, cmd);
+            results = this.withoutParams(slingRequest, cmd);
         } else {
-            results = this.withParams(resourceResolver, cmd);
+            results = this.withParams(slingRequest, cmd);
         }
 
         json.put(KEY_RESULTS, new JSONArray());
@@ -59,7 +62,7 @@ public abstract class AbstractCommandHandler implements CommandHandler {
         return json;
     }
 
-    protected abstract List<Result> withoutParams(final ResourceResolver resourceResolver, final Command cmd);
+    protected abstract List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd);
 
-    protected abstract List<Result> withParams(final ResourceResolver resourceResolver, final Command cmd);
+    protected abstract List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd);
 }

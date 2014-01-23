@@ -24,13 +24,14 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.results.CRXDEResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
@@ -59,12 +60,12 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
     private ResultHelper resultHelper;
 
     @Override
-    public boolean accepts(final ResourceResolver resourceResolver, final Command cmd) {
+    public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
         return StringUtils.equalsIgnoreCase(CMD, cmd.getOp());
     }
 
     @Override
-    protected List<Result> withoutParams(final ResourceResolver resourceResolver, final Command cmd) {
+    protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         final List<Result> results = new LinkedList<Result>();
 
         results.add(new CRXDEResult());
@@ -73,7 +74,8 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
     }
 
     @Override
-    protected List<Result> withParams(final ResourceResolver resourceResolver, final Command cmd) {
+    protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new LinkedList<Result>();
 
         final Resource paramResource = resultHelper.matchFullPath(resourceResolver, cmd.getParam());;
@@ -89,8 +91,7 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
         }
 
         if(results.isEmpty()) {
-            final List<Resource> matchedResources = resultHelper.matchNodeName(resourceResolver, cmd.getParam(),
-                    JcrConstants.NT_BASE, 25);
+            final List<Resource> matchedResources = resultHelper.matchPathFragment(resourceResolver, cmd.getParam());
             for(final Resource matchedResource : matchedResources) {
                 if(CRXDEResult.accepts(matchedResource)) {
                     results.add(new CRXDEResult(matchedResource));
@@ -99,7 +100,7 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
         }
 
         if (results.isEmpty()) {
-            results.addAll(this.withoutParams(resourceResolver, cmd));
+            results.addAll(this.withoutParams(slingRequest, cmd));
         }
 
         return results;

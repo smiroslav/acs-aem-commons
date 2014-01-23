@@ -18,9 +18,9 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl.crxde;
+package com.adobe.acs.commons.quickly.results;
 
-import com.adobe.acs.commons.quickly.BasicResult;
+import com.adobe.acs.commons.quickly.results.BasicResult;
 import org.apache.sling.api.resource.Resource;
 
 public class CRXDEResult extends BasicResult {

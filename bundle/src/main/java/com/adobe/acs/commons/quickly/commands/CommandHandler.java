@@ -21,7 +21,7 @@
 package com.adobe.acs.commons.quickly.commands;
 
 import com.adobe.acs.commons.quickly.Command;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
@@ -29,7 +29,7 @@ public interface CommandHandler {
     final String DEFAULT_CMD = "fallback";
     final String PROP_CMD = "cmd";
 
-    boolean accepts(ResourceResolver resourceResolver, Command cmd);
+    boolean accepts(SlingHttpServletRequest slingRequest, Command cmd);
 
-    JSONObject getResults(ResourceResolver resourceResolver, Command cmd) throws JSONException;
+    JSONObject getResults(SlingHttpServletRequest slingRequest, Command cmd) throws JSONException;
 }

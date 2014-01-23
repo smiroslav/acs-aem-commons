@@ -21,15 +21,15 @@
 @width: 420px;
 @max-height: 300px;
 @padding-cmd: 10px;
+@font-family: Helvetica, Arial, san-serif;
 
 #ACS-COMMONS {
   #acs-commons-quickly {
-
     background: #fff;
     border-width: 0;
     color: #000;
     font-size: 14px;
-    font-family: Helvetica, Arial, san-serif;
+    font-family: @font-family;
     left: 30%;
     padding: 1em;
     position: absolute;
@@ -48,13 +48,21 @@
     .quickly-cmd {
       display: block;
       border-width: 0;
+      font-family: @font-family;
       font-size: 2.5em;
+      height: auto;
       width: (@width - (2 * @padding-cmd));
+      margin: 0;
       padding: @padding-cmd;
-
+      text-align: left;
 
       &:focus {
         outline-width: 0;
+        -webkit-box-shadow: 0 0 0 #fff;
+        -moz-box-shadow: 0 0 0 #fff;
+        box-shadow: 0 0 0 #fff;
+        border: 0 solid #fff;
+        outline: none;
       }
     }
 
@@ -68,8 +76,10 @@
       .quickly-result {
         border: 0;
         color: #666;
+        font-family: @font-family;
         margin: 0;
         padding: .75em 1em;
+        text-align: left;
 
         &:hover {
           cursor: hand;
@@ -79,22 +89,25 @@
           border: 0;
           color: #666;
           font-weight: normal;
+          font-family: @font-family;
           font-size: 1.5em;
           margin: 0;
           padding: 0;
+          text-align: left;
           white-space: pre-wrap;
           word-break: break-word;
         }
 
         .quickly-result-description {
           color: #999;
+          font-family: @font-family;
           font-size: .8em;
           font-style: italic;
           margin: .25em 0 0 0;
           padding: 0;
+          text-align: left;
           white-space: pre-wrap;
           word-break: break-word;
-
         }
       }
     }

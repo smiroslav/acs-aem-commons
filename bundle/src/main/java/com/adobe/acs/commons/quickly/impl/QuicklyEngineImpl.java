@@ -57,16 +57,16 @@ public class QuicklyEngineImpl implements QuicklyEngine {
     private Map<String, CommandHandler> commandHandlers = new HashMap<String, CommandHandler>();
 
     @Override
-    public JSONObject execute(final SlingHttpServletRequest request, final Command cmd) throws JSONException {
-        final ResourceResolver resourceResolver = request.getResourceResolver();
+    public JSONObject execute(final SlingHttpServletRequest slingRequest, final Command cmd) throws JSONException {
+        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
 
         for (Map.Entry<String, CommandHandler> commandHandler : commandHandlers.entrySet()) {
-            if (commandHandler.getValue().accepts(resourceResolver, cmd)) {
-                return commandHandler.getValue().getResults(resourceResolver, cmd);
+            if (commandHandler.getValue().accepts(slingRequest, cmd)) {
+                return commandHandler.getValue().getResults(slingRequest, cmd);
             }
         }
 
-        return defaultCommand.getResults(resourceResolver, cmd);
+        return defaultCommand.getResults(slingRequest, cmd);
     }
 
 

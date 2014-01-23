@@ -19,7 +19,7 @@
  */
 
 /*global angular: false, console: false */
-var quickly = angular.module('quickly',['ngSanitize']).config(function($sceProvider) {
+var quickly = angular.module('quickly',['ngSanitize', 'ngCookies']).config(function($sceProvider) {
     // Completely disable SCE.
     $sceProvider.enabled(false);
 });
