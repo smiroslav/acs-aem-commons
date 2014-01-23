@@ -251,6 +251,10 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     /* Initiatialization */
 
     var init = function() {
+        // Prevent flickering onload
+        $timeout(function() { angular.element('#acs-commons-quickly').css('display', 'block'); }, 1000);
+
+        // Delay until AEM has a chance to update DOM/document properties
         $timeout(function() { $scope.cmd.back(); }, 2500);
     };
 
