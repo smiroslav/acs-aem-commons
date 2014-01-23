@@ -58,6 +58,10 @@ public class BackCommandHandlerImpl extends AbstractCommandHandler {
     private static final Logger log = LoggerFactory.getLogger(BackCommandHandlerImpl.class);
 
     public static final String CMD = "back";
+    public static final String COOKIE_NAME = "acs_quickly_back";
+
+    private static final String KEY_TITLE = "title";
+    private static final String KEY_PATH = "uri";
 
     @Override
     public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
@@ -68,20 +72,24 @@ public class BackCommandHandlerImpl extends AbstractCommandHandler {
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         log.debug("without params");
         final List<Result> results = new LinkedList<Result>();
-        final Cookie cookie = CookieUtil.getCookie(slingRequest, "quicklyBackCmd");
+        final Cookie cookie = CookieUtil.getCookie(slingRequest, COOKIE_NAME);
+
+        if(cookie == null || StringUtils.isBlank(cookie.getValue())) {
+            return EMPTY_RESULTS;
+        }
 
         try {
             final String cookieValue  = URLDecoder.decode(cookie.getValue(), "UTF-8");
             log.debug("Cookie: {}", cookieValue);
 
-
-
             final JSONArray history = new JSONArray(cookieValue);
             for(int i = 0; i < history.length(); i++) {
                 final JSONObject entry = history.getJSONObject(i);
 
-                results.add(new BasicResult(entry.optString("title"),
-                        entry.optString("path"), entry.optString("path")));
+                results.add(new BasicResult(
+                        entry.optString(KEY_TITLE),
+                        entry.optString(KEY_PATH),
+                        entry.optString(KEY_PATH)));
 
             }
         } catch (JSONException e) {

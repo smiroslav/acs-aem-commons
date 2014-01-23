@@ -30,6 +30,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
 
     /* Method namespaces */
     $scope.app = {
+        resultTime: 0,
         timeout: 0,
         timeoutThrottle: 400,
         keyStrokeThrottle: 3,
@@ -53,6 +54,8 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     });
 
     $scope.app.getResults = function() {
+        var requestTime = new Date().getTime();
+
         if(!$scope.data.cmd) {
             $scope.data.results = [];
             return;
@@ -62,10 +65,17 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
             method: 'GET',
             url: '/bin/quickly.json',
             params: {
-                t: new Date().getTime(),
+                t: requestTime,
                 cmd: $scope.data.cmd
             }
         }).success(function(data, status, headers, config) {
+            if(requestTime <= $scope.app.resultTime) {
+                // This check prevents previous slow running queries from
+                // overwriting results of faster later queries
+                return;
+            }
+
+            $scope.app.resultTime = requestTime;
             $scope.data.results = data.results || [];
 
             if($scope.data.results && $scope.data.results[0]) {
@@ -203,22 +213,48 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     $scope.cmd = {};
 
     $scope.cmd.back = function() {
-        var cookie = $cookies.quicklyBackCmd || '[]',
-            history = JSON.parse(cookie);
+        var cookie = $cookies.acs_quickly_back || '[]',
+            cookieHistory = JSON.parse(cookie),
+            history = [],
+            entry,
+            maxSize = 25,
+            i = 0,
+            j = 1;
 
-        history.unshift({title: document.title, path: window.location.href});
+        entry = {
+            title: document.title || 'Unnamed Page',
+            uri: (window.location.pathname  + window.location.search + window.location.hash) || ''
+        };
 
-        if(history.length > 25) {
-            history.pop();
+        console.log(entry);
+
+        if(entry.title && entry.uri) {
+            for(i = 0; i < cookieHistory.length && j < maxSize; i += 1) {
+               if(cookieHistory[i]
+                   && cookieHistory[i].title !== entry.title
+                   && cookieHistory[i].uri !== entry.uri) {
+                    // Not the same as current, so add to history
+                    history.push(cookieHistory[i]);
+                    j += 1;
+                    console.log("pushed item on history:" + i);
+                }
+            }
+
+            // Add history onto the front
+            console.log("unshifted current; always move current to top");
+            history.unshift(entry);
+        } else {
+            history = cookieHistory;
         }
 
-        $cookies.quicklyBackCmd = JSON.stringify(history);
+        // Save data back to cookie
+        $cookies.acs_quickly_back = JSON.stringify(history);
     };
 
     /* Initiatialization */
 
     var init = function() {
-        $scope.cmd.back();
+        $timeout(function() { $scope.cmd.back(); }, 2500);
     };
 
     init();
