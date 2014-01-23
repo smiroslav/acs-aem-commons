@@ -209,8 +209,9 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     };
 
 
-    /* Command Supprt */
+    /* Command Support */
     $scope.cmd = {};
+
 
     $scope.cmd.back = function() {
         var cookie = $cookies.acs_quickly_back || '[]',
@@ -226,8 +227,6 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
             uri: (window.location.pathname  + window.location.search + window.location.hash) || ''
         };
 
-        console.log(entry);
-
         if(entry.title && entry.uri) {
             for(i = 0; i < cookieHistory.length && j < maxSize; i += 1) {
                if(cookieHistory[i]
@@ -236,12 +235,10 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
                     // Not the same as current, so add to history
                     history.push(cookieHistory[i]);
                     j += 1;
-                    console.log("pushed item on history:" + i);
                 }
             }
 
             // Add history onto the front
-            console.log("unshifted current; always move current to top");
             history.unshift(entry);
         } else {
             history = cookieHistory;
