@@ -29,8 +29,10 @@ public class Command {
     private final String param;
 
     public Command(final SlingHttpServletRequest request) {
-        final String raw = request.getParameter("cmd");
+        this(request.getParameter("cmd"));
+    }
 
+    public Command(final String raw) {
         this.operation = StringUtils.lowerCase(StringUtils.substringBefore(raw, " "));
         this.param = StringUtils.substringAfter(raw, " ");
     }

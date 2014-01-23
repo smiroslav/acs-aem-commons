@@ -23,7 +23,6 @@ package com.adobe.acs.commons.quickly.impl;
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.QuicklyEngine;
 import com.adobe.acs.commons.quickly.commands.CommandHandler;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -66,7 +65,8 @@ public class QuicklyEngineImpl implements QuicklyEngine {
             }
         }
 
-        return defaultCommand.getResults(slingRequest, cmd);
+        final Command defaultCmd = new Command(CommandHandler.DEFAULT_CMD + " " + cmd.getParam());
+        return defaultCommand.getResults(slingRequest, defaultCmd);
     }
 
 
@@ -74,7 +74,7 @@ public class QuicklyEngineImpl implements QuicklyEngine {
     protected void bindCommandHandlers(final CommandHandler service, final Map<Object, Object> props) {
         final String cmd = PropertiesUtil.toString(props.get(CommandHandler.PROP_CMD), null);
 
-        if (cmd != null && !StringUtils.equalsIgnoreCase(CommandHandler.DEFAULT_CMD, cmd)) {
+        if (cmd != null) { // && !StringUtils.equalsIgnoreCase(CommandHandler.DEFAULT_CMD, cmd)) {
             commandHandlers.put(cmd, service);
         }
     }
@@ -83,7 +83,7 @@ public class QuicklyEngineImpl implements QuicklyEngine {
     protected void unbindCommandHandlers(final CommandHandler service, final Map<Object, Object> props) {
         final String cmd = PropertiesUtil.toString(props.get(CommandHandler.PROP_CMD), null);
 
-        if (cmd != null && !StringUtils.equalsIgnoreCase(CommandHandler.DEFAULT_CMD, cmd)) {
+        if (cmd != null) { // &&_ !StringUtils.equalsIgnoreCase(CommandHandler.DEFAULT_CMD, cmd)) {
             commandHandlers.remove(cmd);
         }
     }
