@@ -72,10 +72,12 @@ import java.util.Map;
 public class QuicklyFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(QuicklyFilter.class);
 
+    private static final String[] REJECT_PATH_PREFIXES = new String[]{
+            "/system/",
+            "/libs/granite/core/content/login"
+    };
     private static final String HTML_FILE = "/apps/acs-commons/components/utilities/quickly/template.html";
-    private static final String CSS_INCLUDE = "<link rel=\"stylesheet\" href=\"/apps/acs-commons/components/utilities/quickly/clientlibs/app.css\"/>";
-    private static final String JS_INCLUDE = "<script type=\"text/javascript\" src=\"/apps/acs-commons/components/utilities/quickly/clientlibs/app.js\"></script>";
-    private static String APP_HTML = "";
+    private static String appHTML = "";
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -122,7 +124,7 @@ public class QuicklyFilter implements Filter {
                     //printWriter.write(CSS_INCLUDE);
 
                     printWriter.write(contents.substring(0, bodyIndex));
-                    printWriter.write(APP_HTML);
+                    printWriter.write(appHTML);
                     printWriter.write(contents.substring(bodyIndex));
                     return;
                 }
@@ -142,7 +144,7 @@ public class QuicklyFilter implements Filter {
     private boolean accepts(final SlingHttpServletRequest slingRequest) {
         final Resource resource = slingRequest.getResource();
 
-        if(StringUtils.startsWith(resource.getPath(), "/system/")) {
+        if(StringUtils.startsWithAny(resource.getPath(), REJECT_PATH_PREFIXES)) {
             return false;
         }
 
@@ -154,7 +156,7 @@ public class QuicklyFilter implements Filter {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-            APP_HTML = ResourceDataUtil.getNTFileAsString(HTML_FILE, resourceResolver);
+            appHTML = ResourceDataUtil.getNTFileAsString(HTML_FILE, resourceResolver);
         } finally {
             if(resourceResolver != null) {
                 resourceResolver.close();
