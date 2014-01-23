@@ -32,5 +32,5 @@ public interface ResultHelper {
 
     List<Resource> matchPathFragment(ResourceResolver resourceResolver, String pathFragment, String... nodeType);
 
-    List<Resource> matchNodeName(ResourceResolver resourceResolver, String path, String nodeType);
+    List<Resource> matchNodeName(ResourceResolver resourceResolver, String path, String... nodeTypes);
 }

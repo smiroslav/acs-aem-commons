@@ -90,7 +90,7 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
         }
 
         final List<Resource> resources = resultHelper.matchPathFragment(resourceResolver,
-                cmd.getParam(), "cq:Page");
+                cmd.getParam(), "cq:Page", "dam:Asset");
 
         for (final Resource resource : resources) {
             if(GoResult.accepts(resource)) {

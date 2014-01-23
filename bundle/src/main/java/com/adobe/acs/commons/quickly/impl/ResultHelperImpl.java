@@ -32,10 +32,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,12 +144,18 @@ public class ResultHelperImpl implements ResultHelper {
         return results;
     }
 
-    private boolean isValidFragmentResource(final String fragmentSegment, final Resource child, final String[] nodeTypes) {
-        if(StringUtils.startsWith(child.getName(), fragmentSegment)) {
-            final ValueMap properties = child.adaptTo(ValueMap.class);
-            final String primaryType = properties.get(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_BASE);
+    private boolean isValidFragmentResource(final String fragmentSegment, final Resource resource,
+                                            final String[] nodeTypes) {
+        if(StringUtils.startsWith(resource.getName(), fragmentSegment)) {
+            if(ArrayUtils.isEmpty(nodeTypes)) {
+                return true;
+            }
 
-            return (ArrayUtils.isEmpty(nodeTypes) || ArrayUtils.contains(nodeTypes, primaryType));
+            for(final String nodeType :nodeTypes) {
+                if(ResourceUtil.isA(resource, nodeType)) {
+                    return true;
+                }
+            }
         }
 
         return false;
@@ -159,15 +164,18 @@ public class ResultHelperImpl implements ResultHelper {
 
     @Override
     public List<Resource> matchNodeName(final ResourceResolver resourceResolver, final String nodeName,
-                                        String nodeType) {
+                                        String... nodeTypes) {
         final List<Resource> results = new LinkedList<Resource>();
         final Map<String, String> map = new HashMap<String, String>();
 
-        if(nodeType == null) {
-            nodeType = JcrConstants.NT_BASE;
+        if(nodeTypes != null && nodeTypes.length > 0) {
+            map.put("group.p.or", "true");
+
+            for(int i = 0; i < nodeTypes.length; i++) {
+                map.put("group." + (i + 1) + "_type", nodeTypes[i]);
+            }
         }
 
-        map.put("type", nodeType);
         map.put("nodename", nodeName + "*");
         map.put("p.limit", "100");
 
