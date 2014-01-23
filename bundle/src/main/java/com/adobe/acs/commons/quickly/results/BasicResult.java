@@ -22,12 +22,13 @@ package com.adobe.acs.commons.quickly.results;
 
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.util.TextUtil;
+import com.day.cq.dam.api.DamConstants;
 import com.day.cq.dam.commons.util.DamUtil;
 import com.day.cq.wcm.api.Page;
 import com.day.cq.wcm.api.PageManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
@@ -143,7 +144,7 @@ public class BasicResult implements Result {
     public JSONObject toJSON() throws JSONException {
         final JSONObject result = new JSONObject();
         final JSONObject action = new JSONObject();
-        final JSONArray actionParams = new JSONArray();
+        final JSONObject actionParams = new JSONObject();
 
         result.put("title", this.getTitle());
         result.put("description", this.getDescription());
@@ -155,7 +156,7 @@ public class BasicResult implements Result {
         action.put("xhr", this.isActionAsynchronous());
 
         for(final Map.Entry<String, String> param : this.getActionParams().entrySet()) {
-            actionParams.put(new JSONObject().put(param.getKey(), param.getValue()));
+            actionParams.put(param.getKey(), param.getValue());
         }
 
         action.put("params", actionParams);
@@ -180,10 +181,20 @@ public class BasicResult implements Result {
     protected String findAssetTitle(final Resource resource) {
         if(DamUtil.isAsset(resource)) {
             return TextUtil.getFirstNonEmpty(
-                    DamUtil.resolveToAsset(resource).getMetadataValue("dc:title"),
+                    DamUtil.resolveToAsset(resource).getMetadataValue(DamConstants.DC_TITLE),
                     resource.getName());
         } else {
             return resource.getName();
         }
+    }
+
+    protected boolean isOfNodeType(final Resource resource, final String... nodeTypes) {
+        for(final String nodeType :nodeTypes) {
+            if(ResourceUtil.isA(resource, nodeType)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
