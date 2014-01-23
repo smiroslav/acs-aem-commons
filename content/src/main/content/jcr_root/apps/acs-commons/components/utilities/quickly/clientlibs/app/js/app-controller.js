@@ -120,8 +120,10 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
 
     $scope.app.processAction = function(result) {
         if($scope.app.visible) {
-            $scope.ui.createForm(result.action).submit();
-            $scope.app.visible = false;
+            if(result.action.method !== 'noop') {
+                $scope.ui.createForm(result.action).submit();
+                $scope.app.visible = false;
+            }
         }
     };
 
