@@ -47,6 +47,8 @@ public class QuicklyServlet extends SlingAllMethodsServlet {
             throws ServletException, IOException {
         final Command cmd = new Command(request);
 
+        response.setHeader("Content-Type", " application/json; charset=UTF-8");
+
         try {
             response.getWriter().append(quicklyEngine.execute(request, cmd).toString());
 
