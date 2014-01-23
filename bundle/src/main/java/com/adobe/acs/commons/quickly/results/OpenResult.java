@@ -20,8 +20,11 @@
 
 package com.adobe.acs.commons.quickly.results;
 
+import com.day.cq.dam.api.DamConstants;
+import com.day.cq.wcm.api.NameConstants;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 
 public class OpenResult extends BasicResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
@@ -33,12 +36,21 @@ public class OpenResult extends BasicResult {
         if (StringUtils.startsWith(path, "/content/dam")) {
             this.setTitle(findAssetTitle(resource));
             this.setActionURI("/damadmin#" + path);
+            if(!ResourceUtil.isA(resource, DamConstants.NT_DAM_ASSET)) {
+                this.setActionMethod("noop");
+            }
         } else if (StringUtils.startsWith(path, "/content")) {
             this.setTitle(findPageTitle(resource));
             this.setActionURI("/cf#" + path + ".html");
+            if(!ResourceUtil.isA(resource, NameConstants.NT_PAGE)) {
+                this.setActionMethod("noop");
+            }
         } else if (StringUtils.startsWith(path, "/etc")) {
             this.setTitle(findPageTitle(resource));
             this.setActionURI(path + ".html");
+            if(!ResourceUtil.isA(resource, NameConstants.NT_PAGE)) {
+                this.setActionMethod("noop");
+            }
         }
 
         this.setDescription(path);
