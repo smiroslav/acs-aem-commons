@@ -24,7 +24,6 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.adobe.acs.commons.quickly.results.CRXDEResult;
 import com.adobe.acs.commons.quickly.results.GoResult;
 import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.QueryBuilder;
@@ -92,14 +91,14 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
             }
         }
 
-        final Resource paramResource = resultHelper.matchFullPath(resourceResolver, cmd.getParam());;
+        final Resource paramResource = resultHelper.findByAbsolutePathPrefix(resourceResolver, cmd.getParam());;
         if(paramResource != null) {
             results.add(new GoResult(paramResource));
         }
 
         final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
         for(final Resource startsWithResource : startsWithResources) {
-            if(CRXDEResult.accepts(startsWithResource)) {
+            if(GoResult.accepts(startsWithResource)) {
                 results.add(new GoResult(startsWithResource));
             }
         }
@@ -110,8 +109,6 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
                 NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
 
         for (final Resource resource : resources) {
-            log.debug("go resource; {}", resource.getPath());
-
             if(GoResult.accepts(resource)) {
                 results.add(new GoResult(resource));
             }

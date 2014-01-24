@@ -24,7 +24,6 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.adobe.acs.commons.quickly.results.CRXDEResult;
 import com.adobe.acs.commons.quickly.results.GoResult;
 import com.adobe.acs.commons.quickly.results.OpenResult;
 import com.day.cq.dam.api.DamConstants;
@@ -83,14 +82,14 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
         final List<Result> results = new LinkedList<Result>();
 
 
-        final Resource paramResource = resultHelper.matchFullPath(resourceResolver, cmd.getParam());;
+        final Resource paramResource = resultHelper.findByAbsolutePathPrefix(resourceResolver, cmd.getParam());;
         if(paramResource != null) {
-            results.add(new GoResult(paramResource));
+            results.add(new OpenResult(paramResource));
         }
 
         final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
         for(final Resource startsWithResource : startsWithResources) {
-            if(CRXDEResult.accepts(startsWithResource)) {
+            if(OpenResult.accepts(startsWithResource)) {
                 results.add(new GoResult(startsWithResource));
             }
         }

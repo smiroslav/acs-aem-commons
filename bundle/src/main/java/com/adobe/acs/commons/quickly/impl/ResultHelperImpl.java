@@ -63,7 +63,7 @@ public class ResultHelperImpl implements ResultHelper {
     private QueryBuilder queryBuilder;
 
     @Override
-    public Resource matchFullPath(final ResourceResolver resourceResolver, final String path) {
+    public Resource findByAbsolutePathPrefix(final ResourceResolver resourceResolver, final String path) {
         return resourceResolver.getResource(path);
     }
 
@@ -191,6 +191,18 @@ public class ResultHelperImpl implements ResultHelper {
         }
 
         map.put("p.limit", String.valueOf(limit));
+
+        map.put("1_orderby", "@jcr:content/cq:lastModified");
+        map.put("2_orderby", "@jcr:content/jcr:lastModified");
+        map.put("4_orderby", "@jcr:content/jcr:created");
+        map.put("4_orderby", "nodename");
+        map.put("5_orderby", "@jcr:content/jcr:title");
+
+        map.put("1_orderby.sort", "desc");
+        map.put("2_orderby.sort", "desc");
+        map.put("3_orderby.sort", "desc");
+        map.put("4_orderby.sort", "asc");
+        map.put("5_orderby.sort", "asc");
 
         final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
                 resourceResolver.adaptTo(Session.class));

@@ -78,7 +78,7 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new LinkedList<Result>();
 
-        final Resource paramResource = resultHelper.matchFullPath(resourceResolver, cmd.getParam());;
+        final Resource paramResource = resultHelper.findByAbsolutePathPrefix(resourceResolver, cmd.getParam());;
         if(paramResource != null) {
             results.add(new CRXDEResult(paramResource));
         }

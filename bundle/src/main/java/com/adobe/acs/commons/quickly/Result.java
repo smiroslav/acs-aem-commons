@@ -32,6 +32,7 @@ public interface Result {
     String getActionURI();
     String getActionMethod();
     String getActionTarget();
+    String getPath();
     // TODO Make MultiMap?
     Map<String, String> getActionParams();
 

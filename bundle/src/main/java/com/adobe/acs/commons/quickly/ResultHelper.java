@@ -28,7 +28,7 @@ import java.util.List;
 public interface ResultHelper {
     public static final int DEFAULT_QUERY_LIMIT = 100;
 
-    Resource matchFullPath(ResourceResolver resourceResolver, String path);
+    Resource findByAbsolutePathPrefix(ResourceResolver resourceResolver, String path);
 
     List<Resource> startsWith(ResourceResolver resourceResolver, String path);
 
