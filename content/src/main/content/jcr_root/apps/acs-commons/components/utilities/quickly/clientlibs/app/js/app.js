@@ -18,13 +18,12 @@
  * #L%
  */
 
-/*global angular: false, console: false */
+/*global angular: false, document: false */
 var quickly = angular.module('quickly',['ngSanitize', 'ngCookies']).config(function($sceProvider) {
-    // Completely disable SCE.
-    $sceProvider.enabled(false);
+    $sceProvider.enabled(true);
 });
 
-$(function() {
+angular.element(document).ready(function () {
     $('body').keypress(function(e){
         var elementId = 'acs-commons-quickly-ctrl';
 

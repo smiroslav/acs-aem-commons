@@ -25,7 +25,7 @@ import org.apache.sling.api.resource.Resource;
 
 public class GoResult extends BasicResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
-    private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content" };
+    private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content", "/rep:policy" };
 
     public GoResult(final String title, final String description, final String actionURI) {
         this.setTitle(title);
@@ -35,6 +35,7 @@ public class GoResult extends BasicResult {
 
     public GoResult(final Resource resource) {
         final String path = resource.getPath();
+        this.setPath(path);
 
         if (StringUtils.startsWith(path, "/content/dam")) {
             this.setTitle(findAssetTitle(resource));

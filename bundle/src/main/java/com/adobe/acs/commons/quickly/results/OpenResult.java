@@ -28,10 +28,11 @@ import org.apache.sling.api.resource.ResourceUtil;
 
 public class OpenResult extends BasicResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
-    private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content" };
+    private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content", "/rep:policy" };
 
     public OpenResult(final Resource resource) {
         final String path = resource.getPath();
+        this.setPath(path);
 
         if (StringUtils.startsWith(path, "/content/dam")) {
             this.setTitle(findAssetTitle(resource));

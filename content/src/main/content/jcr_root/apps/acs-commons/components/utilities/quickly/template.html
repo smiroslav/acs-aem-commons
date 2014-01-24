@@ -7,7 +7,8 @@
                  ng-show="app.visible"
                  ng-enter="app.processSelected()"
                  ng-up="app.selectUp()"
-                 ng-down="app.selectDown()">
+                 ng-down="app.selectDown()"
+                 ng-right="app.selectRight()">
 
                 <div class="quickly-cmd-wrapper">
                     <input id="acs-commons-quickly-cmd" ng-model="data.cmd" class="quickly-cmd" type="text"/>
@@ -17,7 +18,7 @@
                         ng-show="data.results">
                     <li ng-repeat="result in data.results"
                          ng-click="app.selectResult(result)"
-                         ng-class="{selected: result.selected}"
+                         ng-class="{selected: result.selected, noop: result.action.method === 'noop' || !result.action.method, action: result.action.method !== 'noop', autocomplete: result.path}"
                          class="quickly-result">
                         <h1 class="quickly-result-title">{{result.title}}</h1>
                         <p class="quickly-result-description">{{result.description}}</p>
@@ -29,5 +30,6 @@
         </div>
     </div>
 
+    <script>window.jQuery || document.write('<script src="/etc/clientlibs/granite/jquery.js"><\/script>')</script>
     <script type="text/javascript" src="/apps/acs-commons/components/utilities/quickly/clientlibs/app.js"></script>
 </div>

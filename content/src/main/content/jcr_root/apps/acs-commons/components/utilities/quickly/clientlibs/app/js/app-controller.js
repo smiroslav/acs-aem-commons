@@ -53,6 +53,9 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
         }
     });
 
+
+
+
     $scope.app.getResults = function() {
         var requestTime = new Date().getTime();
 
@@ -105,6 +108,18 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
         var i = $scope.util.findSelectedIndex();
         if(i < $scope.data.results.length - 1) {
             $scope.util.select($scope.data.results[i + 1]);
+        }
+    };
+
+    $scope.app.selectRight = function() {
+        var i = $scope.util.findSelectedIndex(),
+            result = $scope.data.results[i];
+
+        if(result.path) {
+            $scope.data.cmd = $scope.util.getCommandOp($scope.data.cmd) + ' ' + result.path;
+
+            $scope.ui.focusCommand();
+            $scope.ui.scrollCommandInputToEnd();
         }
     };
 
@@ -167,6 +182,19 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
         return html;
     };
 
+    $scope.util.getCommandOp = function(cmd) {
+        var endIndex = cmd.indexOf(' ');
+        if(endIndex < 0) {
+            endIndex = cmd.length - 1;
+        }
+
+        if(cmd) {
+            return cmd.substring(0, endIndex);
+        } else {
+            return '';
+        }
+    };
+
     /* UI Methods */
     $scope.ui = {};
 
@@ -174,6 +202,13 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
         setTimeout(function() {
             angular.element('#acs-commons-quickly-cmd').focus();
         }, 0);
+    };
+
+    $scope.ui.scrollCommandInputToEnd = function() {
+        var input = document.getElementById('acs-commons-quickly-cmd');
+        if(input) {
+            $timeout(function() { input.scrollLeft = input.scrollWidth; });
+        }
     };
 
     $scope.ui.createForm = function(action) {
@@ -192,14 +227,24 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     $scope.ui.scrollResults = function() {
         var container = $('#acs-commons-quickly-app .quickly-results'),
             selected = $('#acs-commons-quickly-app .quickly-result.selected'),
+            containerHeight,
+            containerTop,
+            containerBottom,
+            selectedHeight,
+            selectedTop,
+            selectedBottom;
 
-            containerHeight = container.height(),
-            containerTop = container.scrollTop(),
-            containerBottom = containerTop + containerHeight,
+        if(!selected || !selected.length) {
+            return;
+        }
 
-            selectedHeight = selected.outerHeight(true),
-            selectedTop = selected.offset().top - container.offset().top + containerTop,
-            selectedBottom = selectedTop + selectedHeight;
+        containerHeight = container.height();
+        containerTop = container.scrollTop();
+        containerBottom = containerTop + containerHeight;
+
+        selectedHeight = selected.outerHeight(true);
+        selectedTop = selected.offset().top - container.offset().top + containerTop;
+        selectedBottom = selectedTop + selectedHeight;
 
         if(selectedBottom > containerBottom) {
             // Scroll down
@@ -250,7 +295,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
         $cookies.acs_quickly_back = JSON.stringify(history);
     };
 
-    /* Initiatialization */
+    /* Initialization */
 
     var init = function() {
         // Prevent flickering onload

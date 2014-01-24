@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-/*global quickly: false, angular: false */
+/*global quickly: false, angular: false, console: false */
 
 quickly.directive('ngEnter', function () {
     return function (scope, element, attrs) {
@@ -67,6 +67,27 @@ quickly.directive('ngDown', function () {
                 scope.ui.scrollResults();
 
                 event.preventDefault();
+            }
+        });
+    };
+});
+
+quickly.directive('ngRight', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            var input = document.getElementById('acs-commons-quickly-cmd');
+
+            if(input && input.value && input.value.length > 0
+                && event.which === 39) {
+
+                if(input.selectionEnd === input.value.length) {
+                    // only execute if cursor is at the end of the input
+                    scope.$apply(function (){
+                        scope.$eval(attrs.ngRight);
+                    });
+
+                    event.preventDefault();
+                }
             }
         });
     };

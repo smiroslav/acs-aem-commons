@@ -46,6 +46,7 @@ public class BasicResult implements Result {
 
     private String title;
     private String description;
+    private String path;
     private String actionURI;
     private String actionMethod;
     private String actionTarget;
@@ -89,6 +90,11 @@ public class BasicResult implements Result {
     }
 
     @Override
+    public String getPath() {
+        return path;
+    }
+
+    @Override
     public String getActionTarget() {
         if(StringUtils.isBlank(this.actionTarget)) {
             return DEFAULT_ACTION_TARGET;
@@ -111,6 +117,10 @@ public class BasicResult implements Result {
 
     public void setDescription(final String description) {
         this.description = description;
+    }
+
+    public void setPath(final String path) {
+        this.path = path;
     }
 
     public void setActionURI(final String actionURI) {
@@ -148,6 +158,7 @@ public class BasicResult implements Result {
 
         result.put("title", this.getTitle());
         result.put("description", this.getDescription());
+        result.put("path", this.getPath());
 
         // Action
         action.put("actionURI", this.getActionURI());
@@ -197,4 +208,5 @@ public class BasicResult implements Result {
 
         return false;
     }
+
 }

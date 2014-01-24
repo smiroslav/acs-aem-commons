@@ -20,7 +20,6 @@
 
 package com.adobe.acs.commons.quickly.results;
 
-import com.adobe.acs.commons.quickly.results.BasicResult;
 import org.apache.sling.api.resource.Resource;
 
 public class CRXDEResult extends BasicResult {
@@ -32,6 +31,7 @@ public class CRXDEResult extends BasicResult {
     }
 
     public CRXDEResult(final Resource resource) {
+        this.setPath(resource.getPath());
         this.setTitle(resource.getName());
         this.setDescription(resource.getPath());
         this.setActionURI("/crx/de/index.jsp#" + resource.getPath());
