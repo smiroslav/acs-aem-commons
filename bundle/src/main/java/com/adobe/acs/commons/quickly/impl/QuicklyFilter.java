@@ -64,11 +64,14 @@ import java.util.Map;
         ),
         @Property(
                 name = "filter.order",
-                intValue = -1000,
+                description = "Set to < -2500 to execute before org.apache.sling.rewriter.impl.RewriterFilter. "
+                        + "Including after may result in improper broken link detection.",
+                intValue = -3000,
                 propertyPrivate = true
         )
 })
 @Service
+
 public class QuicklyFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(QuicklyFilter.class);
 
