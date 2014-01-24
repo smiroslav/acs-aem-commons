@@ -134,5 +134,10 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
         DEFAULT_RESULTS.add(new GoResult("pack", "CRX package manager", "/crx/packmgr"));
         DEFAULT_RESULTS.add(new GoResult("touch", "Touch UI", "/projects.html"));
         DEFAULT_RESULTS.add(new GoResult("desktop", "Desktop UI", "/welcome"));
+
+        final GoResult osgiResult = new GoResult("osgi", "OSGi console", "/system/console");
+        osgiResult.setActionTarget("_blank");
+
+        DEFAULT_RESULTS.add(osgiResult);
     }
 }
