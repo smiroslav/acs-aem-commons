@@ -24,8 +24,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 
 public class Command {
+    private final String raw;
     private final String operation;
-
     private final String param;
 
     public Command(final SlingHttpServletRequest request) {
@@ -33,6 +33,7 @@ public class Command {
     }
 
     public Command(final String raw) {
+        this.raw = raw;
         this.operation = StringUtils.lowerCase(StringUtils.substringBefore(raw, " "));
         this.param = StringUtils.substringAfter(raw, " ");
     }
@@ -44,4 +45,6 @@ public class Command {
     public String getParam() {
         return this.param;
     }
+
+    public String toString() { return this.raw; }
 }

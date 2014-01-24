@@ -21,13 +21,13 @@
 package com.adobe.acs.commons.quickly.commands;
 
 import com.adobe.acs.commons.quickly.Command;
-import com.adobe.acs.commons.quickly.commands.impl.go.GoCommandHandlerImpl;
+import com.adobe.acs.commons.quickly.commands.impl.dfault.DefaultCommandHandlerImpl;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
 public interface CommandHandler {
-    final String DEFAULT_CMD = GoCommandHandlerImpl.CMD;
+    final String DEFAULT_CMD = DefaultCommandHandlerImpl.CMD;
     final String PROP_CMD = "cmd";
 
     boolean accepts(SlingHttpServletRequest slingRequest, Command cmd);
