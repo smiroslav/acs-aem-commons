@@ -116,7 +116,11 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
             result = $scope.data.results[i];
 
         if(result.path) {
-            $scope.data.cmd = $scope.util.getCommandOp($scope.data.cmd) + ' ' + result.path;
+            if($scope.util.hasCommandOp($scope.data.cmd)) {
+                $scope.data.cmd = $scope.util.getCommandOp($scope.data.cmd) + ' ' + result.path;
+            } else {
+                $scope.data.cmd = result.path;
+            }
 
             $scope.ui.focusCommand();
             $scope.ui.scrollCommandInputToEnd();
@@ -193,6 +197,24 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
         } else {
             return '';
         }
+    };
+
+    $scope.util.getCommandParam = function(cmd) {
+        var endIndex = cmd.indexOf(' ');
+        if(endIndex < 0) {
+            // If no Op is present then everything is a param to the default command handler
+            return cmd;
+        }
+
+        if(cmd) {
+            return cmd.substring(endIndex, cmd.length);
+        } else {
+            return '';
+        }
+    };
+
+    $scope.util.hasCommandOp = function(cmd) {
+        return cmd.indexOf(' ') >= 0;
     };
 
     /* UI Methods */
