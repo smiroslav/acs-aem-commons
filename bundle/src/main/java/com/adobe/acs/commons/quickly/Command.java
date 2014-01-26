@@ -27,15 +27,23 @@ public class Command {
     private final String raw;
     private final String operation;
     private final String param;
+    private final String[] options;
 
     public Command(final SlingHttpServletRequest request) {
         this(request.getParameter("cmd"));
     }
 
     public Command(final String raw) {
-        this.raw = raw;
-        this.operation = StringUtils.lowerCase(StringUtils.substringBefore(raw, " "));
-        this.param = StringUtils.substringAfter(raw, " ");
+        this.raw = StringUtils.stripToEmpty(raw);
+        this.operation = StringUtils.lowerCase(StringUtils.substringBefore(this.raw, " "));
+
+        if(StringUtils.substringAfter(this.raw, " ").contains(" ")) {
+            this.options = StringUtils.substringBeforeLast(StringUtils.substringAfter(this.raw, " "), " ").split(" ");
+        } else {
+            this.options = new String[]{};
+        }
+
+        this.param = StringUtils.substringAfterLast(raw, " ");
     }
 
     public String getOp() {
@@ -47,4 +55,6 @@ public class Command {
     }
 
     public String toString() { return this.raw; }
+
+    public String[] getOptions() { return this.options; }
 }

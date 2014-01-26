@@ -22,7 +22,7 @@ package com.adobe.acs.commons.quickly.commands.impl.crxde;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.ResultHelper;
+import com.adobe.acs.commons.quickly.results.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
 import com.adobe.acs.commons.quickly.results.CRXDEResult;
 import org.apache.commons.lang.StringUtils;

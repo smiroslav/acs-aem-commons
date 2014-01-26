@@ -21,7 +21,7 @@
 package com.adobe.acs.commons.quickly.impl;
 
 
-import com.adobe.acs.commons.quickly.ResultHelper;
+import com.adobe.acs.commons.quickly.results.ResultHelper;
 import com.day.cq.search.PredicateGroup;
 import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
@@ -130,11 +130,7 @@ public class ResultHelperImpl implements ResultHelper {
             return results;
         }
 
-
-
-
-
-        // Atleast 2 segments; full-node-name/../possible-fragment
+        // At least 2 segments; full-node-name/../possible-fragment
 
         // Get the middle path segments excluding the first and the last
         // This should be a valid relPath from the any matching 0th resource
@@ -194,15 +190,13 @@ public class ResultHelperImpl implements ResultHelper {
 
         map.put("1_orderby", "@jcr:content/cq:lastModified");
         map.put("2_orderby", "@jcr:content/jcr:lastModified");
-        map.put("4_orderby", "@jcr:content/jcr:created");
-        map.put("4_orderby", "nodename");
-        map.put("5_orderby", "@jcr:content/jcr:title");
+        map.put("3_orderby", "@jcr:content/jcr:created");
+        map.put("4_orderby", "@jcr:content/jcr:title");
 
         map.put("1_orderby.sort", "desc");
         map.put("2_orderby.sort", "desc");
         map.put("3_orderby.sort", "desc");
         map.put("4_orderby.sort", "asc");
-        map.put("5_orderby.sort", "asc");
 
         final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
                 resourceResolver.adaptTo(Session.class));
