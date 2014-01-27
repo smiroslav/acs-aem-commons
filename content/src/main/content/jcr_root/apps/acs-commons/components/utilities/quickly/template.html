@@ -1,7 +1,7 @@
-<div id="ACS-COMMONS">
-    <link rel="stylesheet" href="/apps/acs-commons/components/utilities/quickly/clientlibs/app.css"/>
+<!--<div id="ACS-COMMONS">-->
+    <link rel="stylesheet" href="/apps/acs-commons/components/utilities/quickly/clientlibs.css"/>
 
-    <div id="acs-commons-quickly-app" ng-app="quickly">
+    <div id="acs-commons-quickly-app"><!--ng-app="quickly"-->
         <div id="acs-commons-quickly-ctrl" ng-controller="QuicklyCtrl">
             <div id="acs-commons-quickly"
                  ng-show="app.visible"
@@ -30,6 +30,9 @@
         </div>
     </div>
 
-    <script>window.jQuery || document.write('<script src="/etc/clientlibs/granite/jquery.js"><\/script>')</script>
-    <script type="text/javascript" src="/apps/acs-commons/components/utilities/quickly/clientlibs/app.js"></script>
-</div>
+    <!--<script>window.jQuery || document.write('<script src="/etc/clientlibs/granite/jquery.js"><\/script>')</script>-->
+    <!--<script type="text/javascript" src="/apps/acs-commons/components/utilities/quickly/clientlibs/app.js"></script>-->
+    <script type="text/javascript">
+        angular.bootstrap(document.getElementById('acs-commons-quickly-app'), ['quickly']);
+    </script>
+<!--</div>-->

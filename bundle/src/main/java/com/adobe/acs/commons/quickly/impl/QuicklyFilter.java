@@ -79,7 +79,7 @@ public class QuicklyFilter implements Filter {
             "/system/",
             "/libs/granite/core/content/login"
     };
-    private static final String HTML_FILE = "/apps/acs-commons/components/utilities/quickly/template.html";
+    private static final String HTML_FILE = "/apps/acs-commons/components/utilities/quickly/inject.html";
     private static String appHTML = "";
 
     @Reference

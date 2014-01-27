@@ -3,3 +3,5 @@
 app.js
 app-controller.js
 app-directives.js
+
+inject.js
