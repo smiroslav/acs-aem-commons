@@ -147,10 +147,15 @@ public class QuicklyFilter implements Filter {
     private boolean accepts(final SlingHttpServletRequest slingRequest) {
         final Resource resource = slingRequest.getResource();
 
-        if(StringUtils.startsWithAny(resource.getPath(), REJECT_PATH_PREFIXES)) {
+        if(!StringUtils.equalsIgnoreCase("get", slingRequest.getMethod())) {
+            // Only inject on GET requests
+            return false;
+        } else if(StringUtils.startsWithAny(resource.getPath(), REJECT_PATH_PREFIXES)) {
+            return false;
+        } else if(StringUtils.equals(slingRequest.getHeader("X-Requested-With"), "XMLHttpRequest")) {
+            // Do not inject into XHR requests
             return false;
         }
-
         return true;
     }
 
