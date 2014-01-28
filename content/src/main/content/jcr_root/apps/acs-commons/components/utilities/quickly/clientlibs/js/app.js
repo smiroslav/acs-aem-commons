@@ -28,11 +28,18 @@ angular.element(document).ready(function () {
 
         isQuicklyTogglEvent = function(e) {
             if(e.ctrlKey && e.which === 0) {
-                // ctrl-space (Chrome/Safari)
+                // ctrl-space (Chrome/Safari OSX)
+                return true;
+            } else if(e.ctrlKey && e.which === 32) {
+                // ctrl-space (Chrome/Safari Windows)
                 return true;
             } else if (e.shiftKey && e.ctrlKey && e.which === 64) {
-                // shift-ctrl-space (FireFox)
+                // shift-ctrl-space (FireFox OSX)
                 return true;
+            } else if (e.shiftKey && e.ctrlKey && e.which === 32) {
+                // shift-ctrl-space (FireFox Windows)
+                return true;
+
             } else {
                 return false;
             }
