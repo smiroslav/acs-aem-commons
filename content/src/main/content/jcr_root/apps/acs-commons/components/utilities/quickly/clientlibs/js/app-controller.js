@@ -32,7 +32,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     $scope.app = {
         resultTime: 0,
         timeout: 0,
-        timeoutThrottle: 400,
+        timeoutThrottle: 500,
         keyStrokeThrottle: 3,
         keyStrokes: 0,
         resetOnToggle: true,
@@ -42,19 +42,23 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
     /* Watchers */
     $scope.$watch('data.cmd', function(newValue, oldValue) {
         if($scope.app.visible) {
-            clearTimeout($scope.app.timeout);
-            if($scope.app.keyStrokes >= $scope.app.keyStrokeThrottle) {
+
+            // Cancel any existing promises of result retrieval
+            $timeout.cancel($scope.app.timeout);
+
+            /*if($scope.app.keyStrokes >= $scope.app.keyStrokeThrottle) {
                 $scope.app.keyStrokes = 0;
                 $scope.app.getResults();
-            } else {
-                $scope.app.keyStrokes = $scope.app.keyStrokes + 1;
-                $scope.app.timeout = setTimeout(function() { $scope.app.getResults(); }, $scope.app.keyStrokeThrottle);
-            }
+            } else {*/
+                //$scope.app.keyStrokes = $scope.app.keyStrokes + 1;
+                $scope.app.timeout = $timeout(function() {
+                        $scope.app.getResults();
+                    },
+                    $scope.app.timeoutThrottle
+                );
+            /*}*/
         }
     });
-
-
-
 
     $scope.app.getResults = function() {
         var requestTime = new Date().getTime();
@@ -122,6 +126,7 @@ quickly.controller('QuicklyCtrl', ['$scope', '$http', '$timeout', '$cookies', fu
                 $scope.data.cmd = result.path;
             }
 
+            $scope.app.keyStrokes = 0;
             $scope.ui.focusCommand();
             $scope.ui.scrollCommandInputToEnd();
         }
