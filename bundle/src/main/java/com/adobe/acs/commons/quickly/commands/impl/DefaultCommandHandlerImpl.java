@@ -18,13 +18,10 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl.docs;
+package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.adobe.acs.commons.quickly.results.BasicResult;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -33,63 +30,38 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Docs Command Handler"
+        label = "ACS AEM Commons - Quickly - Go Command Handler"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = DocsCommandHandlerImpl.CMD,
+                value = DefaultCommandHandlerImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class DocsCommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(DocsCommandHandlerImpl.class);
+public class DefaultCommandHandlerImpl extends GoCommandHandlerImpl {
+    private static final Logger log = LoggerFactory.getLogger(DefaultCommandHandlerImpl.class);
 
-    public static final String CMD = "docs";
+    public static final String CMD = "default";
 
     @Override
     public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        return StringUtils.endsWithIgnoreCase(CMD, cmd.getOp());
+        return false;
     }
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final List<Result> results = new LinkedList<Result>();
-
-        final BasicResult result = new BasicResult("dev.day.com",
-                "dev.day.com",
-                "http://dev.day.com");
-        result.setActionTarget("_blank");
-
-        results.add(result);
-
-        return results;
+        return this.withParams(slingRequest, cmd);
     }
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final List<Result> results = new LinkedList<Result>();
-
-        final BasicResult result = new BasicResult(
-                "Search AEM documentation",
-                "Search for: " + cmd.getParam(),
-                "https://duckduckgo.com");
-
-        final Map<String,String> params = new HashMap<String, String>();
-        params.put("q", "site:dev.day.com AND " + cmd.getParam());
-        result.setActionParams(params);
-
-        result.setActionTarget("_blank");
-        results.add(result);
-
-        return results;
+        final Command wrappedCmd = new Command(GoCommandHandlerImpl.CMD + " " + cmd.toString());
+        log.debug(wrappedCmd.toString());
+        return super.withParams(slingRequest, wrappedCmd);
     }
 }

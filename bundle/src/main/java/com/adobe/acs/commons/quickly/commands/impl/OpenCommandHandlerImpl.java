@@ -18,7 +18,7 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl.open;
+package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;

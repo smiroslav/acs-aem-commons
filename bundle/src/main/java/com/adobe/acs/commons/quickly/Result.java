@@ -27,6 +27,14 @@ import java.util.Map;
 
 public interface Result {
 
+    public static final String TARGET_BLANK = "_blank";
+    public static final String TARGET_TOP = "_top";
+    public static final String TARGET_SELF = "_self";
+
+    public static final String METHOD_GET = "get";
+    public static final String METHOD_POST = "post";
+    public static final String METHOD_NOOP = "noop";
+
     String getTitle();
     String getDescription();
     String getActionURI();

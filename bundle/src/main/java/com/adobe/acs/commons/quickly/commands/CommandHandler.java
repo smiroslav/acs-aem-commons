@@ -21,7 +21,7 @@
 package com.adobe.acs.commons.quickly.commands;
 
 import com.adobe.acs.commons.quickly.Command;
-import com.adobe.acs.commons.quickly.commands.impl.dfault.DefaultCommandHandlerImpl;
+import com.adobe.acs.commons.quickly.commands.impl.DefaultCommandHandlerImpl;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;

@@ -22,12 +22,12 @@ package com.adobe.acs.commons.quickly.results;
 
 import org.apache.sling.api.resource.Resource;
 
-public class CRXDEResult extends BasicResult {
+public class CRXDEResult extends AbstractResult {
     public CRXDEResult() {
         this.setTitle("CRXDE Lite");
         this.setDescription("/crx/de/index.jsp");
         this.setActionURI("/crx/de/index.jsp");
-        this.setActionTarget("_blank");
+        this.setActionTarget(TARGET_BLANK);
     }
 
     public CRXDEResult(final Resource resource) {
@@ -35,7 +35,7 @@ public class CRXDEResult extends BasicResult {
         this.setTitle(resource.getName());
         this.setDescription(resource.getPath());
         this.setActionURI("/crx/de/index.jsp#" + resource.getPath());
-        this.setActionTarget("_blank");
+        this.setActionTarget(TARGET_BLANK);
     }
 
     public static boolean accepts(final Resource resource) {

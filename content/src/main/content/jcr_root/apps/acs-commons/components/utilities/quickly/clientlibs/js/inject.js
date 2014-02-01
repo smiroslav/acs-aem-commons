@@ -33,7 +33,7 @@ $(function() {
         $acs = $('#ACS-COMMONS');
     }
 
-    $.get('/apps/acs-commons/components/utilities/quickly/template.html', function(data) {
+    $.get('/apps/acs-commons/components/utilities/quickly/quickly.html', function(data) {
         $acs.append(data);
     });
 });

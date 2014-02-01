@@ -20,37 +20,54 @@
 
 package com.adobe.acs.commons.quickly.results;
 
-import com.day.cq.dam.api.DamConstants;
-import com.day.cq.wcm.api.NameConstants;
+import com.adobe.acs.commons.quickly.ResultUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
 
-public class OpenResult extends BasicResult {
+public class OpenResult extends AbstractResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
     private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content", "/rep:policy" };
 
     public OpenResult(final Resource resource) {
-        final String path = resource.getPath();
-        this.setPath(path);
 
-        if (StringUtils.startsWith(path, "/content/dam")) {
-            this.setTitle(findAssetTitle(resource));
-            this.setActionURI("/damadmin#" + path);
-            if(!ResourceUtil.isA(resource, DamConstants.NT_DAM_ASSET)) {
-                this.setActionMethod("noop");
+        final String path = resource.getPath();
+
+        this.setPath(path);
+        this.setTitle(ResultUtil.getTitle(resource));
+
+        if(ResultUtil.isDAMPath(path)) {
+
+            // DAM Path
+
+            if(ResultUtil.isManuscript(resource)) {
+                this.setActionURI(path + ".copyeditor.html");
+            } else {
+                this.setActionURI("/damadmin#" + path);
             }
-        } else if (StringUtils.startsWith(path, "/content")) {
-            this.setTitle(findPageTitle(resource));
+
+            if(!ResultUtil.isAsset(resource)) {
+                this.setActionMethod(METHOD_NOOP);
+            }
+
+
+        } else if (ResultUtil.isWCMPath(path)) {
+
+            // WCM Path
+
             this.setActionURI("/cf#" + path + ".html");
-            if(!ResourceUtil.isA(resource, NameConstants.NT_PAGE)) {
-                this.setActionMethod("noop");
+
+            if(!ResultUtil.isPage(resource)) {
+                this.setActionMethod(METHOD_NOOP);
             }
+
         } else if (StringUtils.startsWith(path, "/etc")) {
-            this.setTitle(findPageTitle(resource));
+
+            // Tools Path
+
             this.setActionURI(path + ".html");
-            if(!ResourceUtil.isA(resource, NameConstants.NT_PAGE)) {
-                this.setActionMethod("noop");
+
+            if(!ResultUtil.isPage(resource)) {
+                this.setActionMethod(METHOD_NOOP);
             }
         }
 

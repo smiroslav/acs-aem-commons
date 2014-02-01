@@ -35,6 +35,6 @@ public interface ResultHelper {
     List<Resource> findByPathFragment(ResourceResolver resourceResolver, String pathFragment,
                                      int limit, String... nodeType);
 
-    List<Resource> findByName(ResourceResolver resourceResolver, String path, boolean strict,
-                              int limit, String... nodeTypes);
+    List<Resource> findByNodeName(ResourceResolver resourceResolver, String path, boolean strict,
+                                  int limit, String... nodeTypes);
 }

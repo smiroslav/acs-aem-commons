@@ -18,7 +18,7 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl.go;
+package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
@@ -61,7 +61,7 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
     public static final String CMD = "go";
 
-    private static List<Result> DEFAULT_RESULTS;
+    private static List<Result> defaultResults;
 
 
     @Reference
@@ -77,7 +77,7 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        return DEFAULT_RESULTS;
+        return defaultResults;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new LinkedList<Result>();
 
-        for(final Result result : DEFAULT_RESULTS) {
+        for(final Result result : defaultResults) {
             if(StringUtils.startsWith(result.getTitle(), cmd.getParam())) {
                 results.add(result);
             }
@@ -119,25 +119,67 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
     @Activate
     protected void activate(final Map<String, String> config) {
-        DEFAULT_RESULTS = new LinkedList<Result>();
+        defaultResults = new LinkedList<Result>();
 
-        DEFAULT_RESULTS.add(new GoResult("wcm", "Web page administration", "/siteadmin"));
-        DEFAULT_RESULTS.add(new GoResult("dam", "DAM administration", "/damadmin"));
-        DEFAULT_RESULTS.add(new GoResult("tags", "Tag administration", "/tagging"));
-        DEFAULT_RESULTS.add(new GoResult("wf", "Workflow administration", "/libs/cq/workflow/content/console.html"));
-        DEFAULT_RESULTS.add(new GoResult("tools", "AEM Tools", "/miscadmin"));
-        DEFAULT_RESULTS.add(new GoResult("inbox", "My Inbox", "/inbox"));
-        DEFAULT_RESULTS.add(new GoResult("users", "User and Group administration", "/useradmin"));
-        DEFAULT_RESULTS.add(new GoResult("campaigns", "Campaign administration", "/mcmadmin"));
-        DEFAULT_RESULTS.add(new GoResult("soco", "Soco administration", "/socoadmin"));
-        DEFAULT_RESULTS.add(new GoResult("crxde", "CRXDE Lite", "/crxde"));
-        DEFAULT_RESULTS.add(new GoResult("pack", "CRX package manager", "/crx/packmgr"));
-        DEFAULT_RESULTS.add(new GoResult("touch", "Touch UI", "/projects.html"));
-        DEFAULT_RESULTS.add(new GoResult("desktop", "Desktop UI", "/welcome"));
+        defaultResults.add(new GoResult("wcm", "Web page administration", "/siteadmin"));
+        defaultResults.add(new GoResult("dam", "DAM administration", "/damadmin"));
+        defaultResults.add(new GoResult("tags", "Tag administration", "/tagging"));
+        defaultResults.add(new GoResult("wf", "Workflow administration", "/libs/cq/workflow/content/console.html"));
+        defaultResults.add(new GoResult("tools", "AEM Tools", "/miscadmin"));
+        defaultResults.add(new GoResult("inbox", "My Inbox", "/inbox"));
+        defaultResults.add(new GoResult("users", "User and Group administration", "/useradmin"));
+        defaultResults.add(new GoResult("campaigns", "Campaign administration", "/mcmadmin"));
+        defaultResults.add(new GoResult("soco", "Soco administration", "/socoadmin"));
 
-        final GoResult osgiResult = new GoResult("osgi", "OSGi console", "/system/console");
-        osgiResult.setActionTarget("_blank");
+        defaultResults.add(new GoResult("publications", "DPS administration", "/publishingadmin"));
+        defaultResults.add(new GoResult("manuscripts", "Manuscript administration", "/manuscriptsadmin"));
 
-        DEFAULT_RESULTS.add(osgiResult);
+
+        defaultResults.add(new GoResult("crxde", "CRXDE Lite", "/crxde"));
+        defaultResults.add(new GoResult("pack", "CRX package manager", "/crx/packmgr"));
+        defaultResults.add(new GoResult("touch", "Touch UI", "/projects.html"));
+        defaultResults.add(new GoResult("desktop", "Desktop UI", "/welcome"));
+
+        /* Felix Console */
+
+        defaultResults.add(new GoResult("system",
+                "System Console",
+                "/system/console",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/adapters",
+                "System Console > Adapters",
+                "/system/console/adapters",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/components",
+                "System Console > Components",
+                "/system/console/components",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/configmgr",
+                "System Console > Config manager",
+                "/system/console/configMgr",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/depfinder",
+                "System Console > Dependency Finder",
+                "/system/console/depfinder",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/events",
+                "System Console > Events",
+                "/system/console/events",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/jmx",
+                "System Console > JMX",
+                "/system/console/jmx",
+                "_blank"));
+
+        defaultResults.add(new GoResult("system/request",
+                "System Console > Recent Requests",
+                "/system/console/requests",
+                "_blank"));
     }
 }

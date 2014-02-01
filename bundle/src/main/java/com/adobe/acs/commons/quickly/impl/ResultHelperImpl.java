@@ -115,7 +115,7 @@ public class ResultHelperImpl implements ResultHelper {
             return results;
         }
 
-        final List<Resource> fragmentRoots = this.findByName(resourceResolver,
+        final List<Resource> fragmentRoots = this.findByNodeName(resourceResolver,
                 segments[0], (segments.length > 1), limit, JcrConstants.NT_BASE);
 
         if(segments.length == 1) {
@@ -167,8 +167,8 @@ public class ResultHelperImpl implements ResultHelper {
 
 
     @Override
-    public List<Resource> findByName(final ResourceResolver resourceResolver, final String nodeName,
-                                     final boolean strict, final int limit, String... nodeTypes) {
+    public List<Resource> findByNodeName(final ResourceResolver resourceResolver, final String nodeName,
+                                         final boolean strict, final int limit, String... nodeTypes) {
         final List<Resource> results = new LinkedList<Resource>();
         final Map<String, String> map = new HashMap<String, String>();
 

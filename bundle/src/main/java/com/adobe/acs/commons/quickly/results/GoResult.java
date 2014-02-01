@@ -20,31 +20,45 @@
 
 package com.adobe.acs.commons.quickly.results;
 
+import com.adobe.acs.commons.quickly.ResultUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
-public class GoResult extends BasicResult {
+public class GoResult extends AbstractResult {
     private static final String[] ACCEPT_PREFIXES = new String[]{"/content", "/etc"};
     private static final String[] REJECT_PATH_SEGMENTS = new String[]{ "/jcr:content", "/rep:policy" };
 
     public GoResult(final String title, final String description, final String actionURI) {
+        this(title, description, actionURI, TARGET_TOP);
+    }
+
+    public GoResult(final String title, final String description, final String actionURI, final String actionTarget) {
         this.setTitle(title);
         this.setDescription(description);
         this.setActionURI(actionURI);
+        this.setActionTarget(actionTarget);
     }
 
     public GoResult(final Resource resource) {
         final String path = resource.getPath();
-        this.setPath(path);
 
-        if (StringUtils.startsWith(path, "/content/dam")) {
-            this.setTitle(findAssetTitle(resource));
+        this.setPath(path);
+        this.setTitle(ResultUtil.getTitle(resource));
+
+        if (ResultUtil.isDAMPath(path)) {
+
             this.setActionURI("/damadmin#" + path);
-        } else if (StringUtils.startsWith(path, "/content")) {
-            this.setTitle(findPageTitle(resource));
+
+        } else if (ResultUtil.isUGCPath(path)) {
+
+            this.setActionURI("/socoadmin#" + path);
+
+        } else if (ResultUtil.isWCMPath(path)) {
+
             this.setActionURI("/siteadmin#" + path);
-        } else if (StringUtils.startsWith(path, "/etc")) {
-            this.setTitle(findPageTitle(resource));
+
+        } else if (ResultUtil.isToolsPath(path)) {
+
             this.setActionURI("/miscadmin#" + path);
         }
 
