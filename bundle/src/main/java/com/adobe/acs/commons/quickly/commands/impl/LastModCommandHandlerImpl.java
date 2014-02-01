@@ -24,7 +24,7 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
 import com.adobe.acs.commons.quickly.results.OpenResult;
-import com.adobe.acs.commons.quickly.results.ResultHelper;
+import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
 import com.day.cq.search.PredicateGroup;
 import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
@@ -48,7 +48,7 @@ import javax.jcr.Session;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -74,7 +74,7 @@ public class LastModCommandHandlerImpl extends AbstractCommandHandler {
     private QueryBuilder queryBuilder;
 
     @Reference
-    private ResultHelper resultHelper;
+    private PathBasedResourceFinder pathBasedResourceFinder;
 
     @Override
     public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
@@ -90,7 +90,7 @@ public class LastModCommandHandlerImpl extends AbstractCommandHandler {
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
 
-        final List<Result> results = new LinkedList<Result>();
+        final List<Result> results = new ArrayList<Result>();
         final Map<String, String> map = new HashMap<String, String>();
 
         final String relativeDateRange = this.getRelativeDateRangeLowerBound(cmd);

@@ -22,10 +22,9 @@ package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.results.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.adobe.acs.commons.quickly.results.GoResult;
 import com.adobe.acs.commons.quickly.results.OpenResult;
+import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
 import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.wcm.api.NameConstants;
@@ -41,7 +40,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component(
@@ -64,7 +64,7 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
     private QueryBuilder queryBuilder;
 
     @Reference
-    private ResultHelper resultHelper;
+    private PathBasedResourceFinder pathBasedResourceFinder;
 
     @Override
     public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
@@ -73,35 +73,27 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        return EMPTY_RESULTS;
+        return Collections.EMPTY_LIST;
     }
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
-        final List<Result> results = new LinkedList<Result>();
 
+        final List<Result> results = new ArrayList<Result>();
 
-        final Resource paramResource = resultHelper.findByAbsolutePathPrefix(resourceResolver, cmd.getParam());;
-        if(paramResource != null) {
-            results.add(new OpenResult(paramResource));
-        }
+        /** Find Path-based Matching Resources **/
 
-        final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
-        for(final Resource startsWithResource : startsWithResources) {
-            if(OpenResult.accepts(startsWithResource)) {
-                results.add(new GoResult(startsWithResource));
-            }
-        }
-
-        final List<Resource> matchedResources = resultHelper.findByPathFragment(resourceResolver,
+        final List<Resource> resources = pathBasedResourceFinder.findAll(resourceResolver,
                 cmd.getParam(),
-                ResultHelper.DEFAULT_QUERY_LIMIT,
+                PathBasedResourceFinder.DEFAULT_QUERY_LIMIT,
                 NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
 
-        for(final Resource matchedResource : matchedResources) {
-            if(OpenResult.accepts(matchedResource)) {
-                results.add(new OpenResult(matchedResource));
+        /** Accepts **/
+
+        for(final Resource resource : resources) {
+            if(OpenResult.accepts(resource)) {
+                results.add(new OpenResult(resource));
             }
         }
 

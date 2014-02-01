@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -62,12 +62,12 @@ public class DocsCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final List<Result> results = new LinkedList<Result>();
+        final List<Result> results = new ArrayList<Result>();
 
         final BasicResult result = new BasicResult("dev.day.com",
                 "dev.day.com",
                 "http://dev.day.com");
-        result.setActionTarget("_blank");
+        result.setActionTarget(Result.TARGET_BLANK);
 
         results.add(result);
 
@@ -76,7 +76,7 @@ public class DocsCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final List<Result> results = new LinkedList<Result>();
+        final List<Result> results = new ArrayList<Result>();
 
         final BasicResult result = new BasicResult(
                 "Search AEM documentation",
@@ -87,7 +87,7 @@ public class DocsCommandHandlerImpl extends AbstractCommandHandler {
         params.put("q", "site:dev.day.com AND " + cmd.getParam());
         result.setActionParams(params);
 
-        result.setActionTarget("_blank");
+        result.setActionTarget(Result.TARGET_BLANK);
         results.add(result);
 
         return results;

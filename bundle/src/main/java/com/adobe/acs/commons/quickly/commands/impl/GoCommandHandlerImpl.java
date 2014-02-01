@@ -22,9 +22,9 @@ package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.results.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
 import com.adobe.acs.commons.quickly.results.GoResult;
+import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
 import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.wcm.api.NameConstants;
@@ -41,7 +41,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,14 +61,14 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
     public static final String CMD = "go";
 
-    private static List<Result> defaultResults;
+    private static List<Result> shortcuts;
 
 
     @Reference
     private QueryBuilder queryBuilder;
 
     @Reference
-    private ResultHelper resultHelper;
+    private PathBasedResourceFinder pathBasedResourceFinder;
 
     @Override
     public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
@@ -77,36 +77,25 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        return defaultResults;
+        return shortcuts;
     }
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        final long start = System.currentTimeMillis();
+
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
-        final List<Result> results = new LinkedList<Result>();
 
-        for(final Result result : defaultResults) {
-            if(StringUtils.startsWith(result.getTitle(), cmd.getParam())) {
-                results.add(result);
-            }
-        }
+        final List<Result> results = new ArrayList<Result>();
 
-        final Resource paramResource = resultHelper.findByAbsolutePathPrefix(resourceResolver, cmd.getParam());;
-        if(paramResource != null) {
-            results.add(new GoResult(paramResource));
-        }
+        /** Find Path-based Matching Resources **/
 
-        final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
-        for(final Resource startsWithResource : startsWithResources) {
-            if(GoResult.accepts(startsWithResource)) {
-                results.add(new GoResult(startsWithResource));
-            }
-        }
-
-        final List<Resource> resources = resultHelper.findByPathFragment(resourceResolver,
+        final List<Resource> resources = pathBasedResourceFinder.findAll(resourceResolver,
                 cmd.getParam(),
-                ResultHelper.DEFAULT_QUERY_LIMIT,
+                PathBasedResourceFinder.DEFAULT_QUERY_LIMIT,
                 NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
+
+        /** Accepts **/
 
         for (final Resource resource : resources) {
             if(GoResult.accepts(resource)) {
@@ -114,70 +103,113 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
             }
         }
 
+        log.debug("Go w/ Params({}) >> Execution time: {} ms", cmd.getParam(), System.currentTimeMillis() - start);
+
         return results;
     }
 
     @Activate
     protected void activate(final Map<String, String> config) {
-        defaultResults = new LinkedList<Result>();
+        shortcuts = new ArrayList<Result>();
 
-        defaultResults.add(new GoResult("wcm", "Web page administration", "/siteadmin"));
-        defaultResults.add(new GoResult("dam", "DAM administration", "/damadmin"));
-        defaultResults.add(new GoResult("tags", "Tag administration", "/tagging"));
-        defaultResults.add(new GoResult("wf", "Workflow administration", "/libs/cq/workflow/content/console.html"));
-        defaultResults.add(new GoResult("tools", "AEM Tools", "/miscadmin"));
-        defaultResults.add(new GoResult("inbox", "My Inbox", "/inbox"));
-        defaultResults.add(new GoResult("users", "User and Group administration", "/useradmin"));
-        defaultResults.add(new GoResult("campaigns", "Campaign administration", "/mcmadmin"));
-        defaultResults.add(new GoResult("soco", "Soco administration", "/socoadmin"));
+        shortcuts.add(new GoResult("wcm",
+                "Web page administration",
+                "/siteadmin"));
 
-        defaultResults.add(new GoResult("publications", "DPS administration", "/publishingadmin"));
-        defaultResults.add(new GoResult("manuscripts", "Manuscript administration", "/manuscriptsadmin"));
+        shortcuts.add(new GoResult("dam",
+                "DAM administration",
+                "/damadmin"));
 
+        shortcuts.add(new GoResult("tags",
+                "Tag administration",
+                "/tagging"));
 
-        defaultResults.add(new GoResult("crxde", "CRXDE Lite", "/crxde"));
-        defaultResults.add(new GoResult("pack", "CRX package manager", "/crx/packmgr"));
-        defaultResults.add(new GoResult("touch", "Touch UI", "/projects.html"));
-        defaultResults.add(new GoResult("desktop", "Desktop UI", "/welcome"));
+        shortcuts.add(new GoResult("wf",
+                "Workflow administration",
+                "/libs/cq/workflow/content/console.html"));
+
+        shortcuts.add(new GoResult("tools",
+                "AEM Tools",
+                "/miscadmin"));
+
+        shortcuts.add(new GoResult("inbox",
+                "My Inbox",
+                "/inbox"));
+
+        shortcuts.add(new GoResult("users",
+                "User and Group administration",
+                "/useradmin"));
+
+        shortcuts.add(new GoResult("campaigns",
+                "Campaign administration",
+                "/mcmadmin"));
+
+        shortcuts.add(new GoResult("soco",
+                "Soco administration",
+                "/socoadmin"));
+
+        shortcuts.add(new GoResult("publications",
+                "DPS administration",
+                "/publishingadmin"));
+
+        shortcuts.add(new GoResult("manuscripts",
+                "Manuscript administration",
+                "/manuscriptsadmin"));
+
+        shortcuts.add(new GoResult("crxde",
+                "CRXDE Lite",
+                "/crxde"));
+
+        shortcuts.add(new GoResult("pack",
+                "CRX package manager",
+                "/crx/packmgr"));
+
+        shortcuts.add(new GoResult("touch",
+                "Touch UI",
+                "/projects.html"));
+
+        shortcuts.add(new GoResult("desktop",
+                "Desktop UI",
+                "/welcome"));
 
         /* Felix Console */
 
-        defaultResults.add(new GoResult("system",
+        shortcuts.add(new GoResult("system",
                 "System Console",
                 "/system/console",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/adapters",
+        shortcuts.add(new GoResult("system/adapters",
                 "System Console > Adapters",
                 "/system/console/adapters",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/components",
+        shortcuts.add(new GoResult("system/components",
                 "System Console > Components",
                 "/system/console/components",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/configmgr",
+        shortcuts.add(new GoResult("system/configmgr",
                 "System Console > Config manager",
                 "/system/console/configMgr",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/depfinder",
+        shortcuts.add(new GoResult("system/depfinder",
                 "System Console > Dependency Finder",
                 "/system/console/depfinder",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/events",
+        shortcuts.add(new GoResult("system/events",
                 "System Console > Events",
                 "/system/console/events",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/jmx",
+        shortcuts.add(new GoResult("system/jmx",
                 "System Console > JMX",
                 "/system/console/jmx",
                 "_blank"));
 
-        defaultResults.add(new GoResult("system/request",
+        shortcuts.add(new GoResult("system/request",
                 "System Console > Recent Requests",
                 "/system/console/requests",
                 "_blank"));

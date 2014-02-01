@@ -61,7 +61,6 @@ public class DefaultCommandHandlerImpl extends GoCommandHandlerImpl {
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         final Command wrappedCmd = new Command(GoCommandHandlerImpl.CMD + " " + cmd.toString());
-        log.debug(wrappedCmd.toString());
         return super.withParams(slingRequest, wrappedCmd);
     }
 }

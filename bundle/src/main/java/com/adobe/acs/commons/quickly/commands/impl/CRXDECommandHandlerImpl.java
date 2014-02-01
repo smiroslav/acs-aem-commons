@@ -22,9 +22,10 @@ package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.results.ResultHelper;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.comparators.LexicographicalResourcePathComparator;
 import com.adobe.acs.commons.quickly.results.CRXDEResult;
+import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -37,7 +38,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component(
@@ -57,7 +59,7 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
     public static final String CMD = "crxde";
 
     @Reference
-    private ResultHelper resultHelper;
+    private PathBasedResourceFinder pathBasedResourceFinder;
 
     @Override
     public boolean accepts(final SlingHttpServletRequest slingRequest, final Command cmd) {
@@ -66,7 +68,7 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final List<Result> results = new LinkedList<Result>();
+        final List<Result> results = new ArrayList<Result>();
 
         results.add(new CRXDEResult());
 
@@ -75,34 +77,31 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        final long start = System.currentTimeMillis();
+
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
-        final List<Result> results = new LinkedList<Result>();
+        final List<Result> results = new ArrayList<Result>();
 
-        final Resource paramResource = resultHelper.findByAbsolutePathPrefix(resourceResolver, cmd.getParam());;
-        if(paramResource != null) {
-            results.add(new CRXDEResult(paramResource));
-        }
+        final List<Resource> resources = pathBasedResourceFinder.findAll(resourceResolver,
+               cmd.getParam(),
+               PathBasedResourceFinder.DEFAULT_QUERY_LIMIT);
 
-        final List<Resource> startsWithResources = resultHelper.startsWith(resourceResolver, cmd.getParam());
-        for(final Resource startsWithResource : startsWithResources) {
-            if(CRXDEResult.accepts(startsWithResource)) {
-                results.add(new CRXDEResult(startsWithResource));
-            }
-        }
 
-        if(results.isEmpty()) {
-            final List<Resource> matchedResources = resultHelper.findByPathFragment(resourceResolver, cmd.getParam(),
-                    ResultHelper.DEFAULT_QUERY_LIMIT);
-            for(final Resource matchedResource : matchedResources) {
-                if(CRXDEResult.accepts(matchedResource)) {
-                    results.add(new CRXDEResult(matchedResource));
+        // Sorting is Command specific; Sort by path in crxde
+
+        Collections.sort(resources, new LexicographicalResourcePathComparator());
+
+        if (resources.isEmpty()) {
+            results.addAll(this.withoutParams(slingRequest, cmd));
+        } else {
+            for(final Resource resource : resources) {
+                if(CRXDEResult.accepts(resource)) {
+                    results.add(new CRXDEResult(resource));
                 }
             }
         }
 
-        if (results.isEmpty()) {
-            results.addAll(this.withoutParams(slingRequest, cmd));
-        }
+        log.debug("CRXDE w/ Params({}) >> Execution time: {} ms", cmd.getParam(), System.currentTimeMillis() - start);
 
         return results;
     }

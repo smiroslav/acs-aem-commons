@@ -24,42 +24,24 @@ import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class AbstractCommandHandler implements CommandHandler {
     private static final Logger log = LoggerFactory.getLogger(AbstractCommandHandler.class);
 
-    private static String KEY_RESULTS = "results";
-
-    public static final List<Result> EMPTY_RESULTS = new LinkedList<Result>();
-
     @Override
-    public JSONObject getResults(final SlingHttpServletRequest slingRequest, final Command cmd) throws JSONException {
-        final JSONObject json = new JSONObject();
-        final List<Result> results;
-
+    public Collection<Result> getResults(final SlingHttpServletRequest slingRequest,
+                                    final Command cmd) throws JSONException {
         if (StringUtils.isBlank(cmd.getParam())) {
-            results = this.withoutParams(slingRequest, cmd);
+            return this.withoutParams(slingRequest, cmd);
         } else {
-            results = this.withParams(slingRequest, cmd);
+            return this.withParams(slingRequest, cmd);
         }
-
-        json.put(KEY_RESULTS, new JSONArray());
-
-        for (final Result result : results) {
-            if(result.isValid()) {
-                json.accumulate(KEY_RESULTS, result.toJSON());
-            }
-        }
-
-        return json;
     }
 
     protected abstract List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd);

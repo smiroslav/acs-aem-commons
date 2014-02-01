@@ -28,6 +28,8 @@ import com.day.cq.wcm.api.Page;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 
+import java.util.List;
+
 public class ResultUtil {
 
     public final static String getTitle(final Resource resource) {
@@ -95,4 +97,29 @@ public class ResultUtil {
 
         return false;
     }
+
+    public final static List<Resource> mergeAndDeDupe(final List<Resource> to, final List<Resource> from) {
+        if(to.isEmpty() && !from.isEmpty()) {
+            return from;
+        } else if (!to.isEmpty() && from.isEmpty())  {
+            return to;
+        }
+
+        for(final Resource fromResource : from) {
+            boolean found = false;
+            for(final Resource toResource : to) {
+                if(StringUtils.equals(toResource.getPath(), fromResource.getPath())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found) {
+                to.add(fromResource);
+            }
+        }
+
+        return to;
+    }
+
 }

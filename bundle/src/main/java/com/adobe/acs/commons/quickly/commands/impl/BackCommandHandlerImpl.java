@@ -40,7 +40,8 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.Cookie;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.LinkedList;
+import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component(
@@ -70,17 +71,15 @@ public class BackCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        log.debug("without params");
-        final List<Result> results = new LinkedList<Result>();
+        final List<Result> results = new ArrayList<Result>();
         final Cookie cookie = CookieUtil.getCookie(slingRequest, COOKIE_NAME);
 
         if(cookie == null || StringUtils.isBlank(cookie.getValue())) {
-            return EMPTY_RESULTS;
+            return Collections.EMPTY_LIST;
         }
 
         try {
             final String cookieValue  = URLDecoder.decode(cookie.getValue(), "UTF-8");
-            log.debug("Cookie: {}", cookieValue);
 
             final JSONArray history = new JSONArray(cookieValue);
             for(int i = 0; i < history.length(); i++) {
@@ -94,10 +93,10 @@ public class BackCommandHandlerImpl extends AbstractCommandHandler {
             }
         } catch (JSONException e) {
             log.error(e.getMessage());
-            return EMPTY_RESULTS;
+            return Collections.EMPTY_LIST;
         } catch (UnsupportedEncodingException e) {
             log.error(e.getMessage());
-            return EMPTY_RESULTS;
+            return Collections.EMPTY_LIST;
         }
 
         return results;

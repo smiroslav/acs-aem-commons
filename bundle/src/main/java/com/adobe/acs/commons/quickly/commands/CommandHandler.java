@@ -21,10 +21,12 @@
 package com.adobe.acs.commons.quickly.commands;
 
 import com.adobe.acs.commons.quickly.Command;
+import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.commands.impl.DefaultCommandHandlerImpl;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+
+import java.util.Collection;
 
 public interface CommandHandler {
     final String DEFAULT_CMD = DefaultCommandHandlerImpl.CMD;
@@ -32,5 +34,5 @@ public interface CommandHandler {
 
     boolean accepts(SlingHttpServletRequest slingRequest, Command cmd);
 
-    JSONObject getResults(SlingHttpServletRequest slingRequest, Command cmd) throws JSONException;
+    Collection<Result> getResults(SlingHttpServletRequest slingRequest, Command cmd) throws JSONException;
 }
