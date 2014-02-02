@@ -23,8 +23,9 @@ package com.adobe.acs.commons.quickly.commands.impl;
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.comparators.PathRelevanceComparator;
 import com.adobe.acs.commons.quickly.results.GoResult;
-import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
+import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
 import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.wcm.api.NameConstants;
@@ -42,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -88,15 +90,23 @@ public class GoCommandHandlerImpl extends AbstractCommandHandler {
 
         final List<Result> results = new ArrayList<Result>();
 
-        /** Find Path-based Matching Resources **/
+        /* Look for shortcuts first. Add directly to results to maintain their initial order */
+        for(final Result shortcut : shortcuts ) {
+            if(StringUtils.startsWithIgnoreCase(shortcut.getTitle(), cmd.getParam())) {
+                results.add(shortcut);
+            }
+        }
 
+        /** Find Path-based Matching Resources **/
         final List<Resource> resources = pathBasedResourceFinder.findAll(resourceResolver,
                 cmd.getParam(),
                 PathBasedResourceFinder.DEFAULT_QUERY_LIMIT,
                 NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
 
-        /** Accepts **/
+        /** Sort by custom relevance **/
+        Collections.sort(resources, new PathRelevanceComparator());
 
+        /** Accepts **/
         for (final Resource resource : resources) {
             if(GoResult.accepts(resource)) {
                 results.add(new GoResult(resource));
