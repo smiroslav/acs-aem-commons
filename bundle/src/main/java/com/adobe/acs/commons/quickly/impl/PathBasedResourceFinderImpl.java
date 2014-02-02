@@ -22,7 +22,7 @@ package com.adobe.acs.commons.quickly.impl;
 
 
 import com.adobe.acs.commons.quickly.ResultUtil;
-import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
+import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
 import com.day.cq.search.PredicateGroup;
 import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
@@ -211,10 +211,6 @@ public class PathBasedResourceFinderImpl implements PathBasedResourceFinder {
         if(segments.length == 1) {
             // Single path segment; find anything that matches this nodeName*
             resources =  this.getChildren(true, fragmentRoots, null);
-
-            for(final Resource tmp : resources) {
-                log.debug(">>> {}", tmp.getPath());
-            }
 
             log.debug("findByPathFragment(3) >> Execution time: {} ms -- {} results.",
                     System.currentTimeMillis() - start,

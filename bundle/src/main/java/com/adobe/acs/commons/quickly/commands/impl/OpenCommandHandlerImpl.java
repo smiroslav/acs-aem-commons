@@ -23,8 +23,9 @@ package com.adobe.acs.commons.quickly.commands.impl;
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.comparators.PathRelevanceComparator;
 import com.adobe.acs.commons.quickly.results.OpenResult;
-import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
+import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
 import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.wcm.api.NameConstants;
@@ -88,6 +89,9 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
                 cmd.getParam(),
                 PathBasedResourceFinder.DEFAULT_QUERY_LIMIT,
                 NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
+
+        /** Sort by custom relevance **/
+        Collections.sort(resources, new PathRelevanceComparator());
 
         /** Accepts **/
 

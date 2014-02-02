@@ -25,7 +25,7 @@ import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
 import com.adobe.acs.commons.quickly.comparators.LexicographicalResourcePathComparator;
 import com.adobe.acs.commons.quickly.results.CRXDEResult;
-import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
+import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
