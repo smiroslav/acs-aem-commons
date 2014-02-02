@@ -27,6 +27,7 @@ import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultUtil;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
 import com.adobe.acs.commons.quickly.comparators.LastModifiedComparator;
+import com.adobe.acs.commons.quickly.results.InfoResult;
 import com.adobe.acs.commons.quickly.results.OpenResult;
 import com.day.cq.commons.jcr.JcrConstants;
 import com.day.cq.dam.api.DamConstants;
@@ -91,16 +92,25 @@ public class LastModCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        return this.withParams(slingRequest, cmd);
+        final List<Result> results = new ArrayList<Result>();
+
+        final InfoResult infoResult = new InfoResult(
+                "lastmod [ 1s | 2m | 3h | 4d | 5w | 6M | 7y ]",
+                "Defaults to: 1d");
+
+        results.add(infoResult);
+
+        results.addAll(this.withParams(slingRequest, cmd));
+
+        return results;
     }
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
         final long start = System.currentTimeMillis();
 
-        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
-
         final List<Result> results = new ArrayList<Result>();
+        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
 
         final List<Resource> pages = this.getLastModifiedPages(resourceResolver, cmd);
         log.debug("LastModified pages -- [ {} ] results", pages.size());
