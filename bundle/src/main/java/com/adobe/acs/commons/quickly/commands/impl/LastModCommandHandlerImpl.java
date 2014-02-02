@@ -21,15 +21,21 @@
 package com.adobe.acs.commons.quickly.commands.impl;
 
 import com.adobe.acs.commons.quickly.Command;
+import com.adobe.acs.commons.quickly.LastModifiedUtil;
+import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
 import com.adobe.acs.commons.quickly.Result;
+import com.adobe.acs.commons.quickly.ResultUtil;
 import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.comparators.LastModifiedComparator;
 import com.adobe.acs.commons.quickly.results.OpenResult;
-import com.adobe.acs.commons.quickly.results.PathBasedResourceFinder;
+import com.day.cq.commons.jcr.JcrConstants;
+import com.day.cq.dam.api.DamConstants;
 import com.day.cq.search.PredicateGroup;
 import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.search.result.Hit;
 import com.day.cq.search.result.SearchResult;
+import com.day.cq.wcm.api.NameConstants;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -39,16 +45,15 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,8 +72,11 @@ public class LastModCommandHandlerImpl extends AbstractCommandHandler {
     private static final Logger log = LoggerFactory.getLogger(LastModCommandHandlerImpl.class);
 
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy @ hh:mm aaa");
+    private static final int MAX_QUERY_RESULTS = 25;
 
     public static final String CMD = "lastmod";
+
+
 
     @Reference
     private QueryBuilder queryBuilder;
@@ -88,34 +96,76 @@ public class LastModCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
+        final long start = System.currentTimeMillis();
+
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
 
         final List<Result> results = new ArrayList<Result>();
-        final Map<String, String> map = new HashMap<String, String>();
 
+        final List<Resource> pages = this.getLastModifiedPages(resourceResolver, cmd);
+        log.debug("LastModified pages -- [ {} ] results", pages.size());
+        final List<Resource> assets = this.getLastModifiedAssets(resourceResolver, cmd);
+        log.debug("LastModified assets -- [ {} ] results", assets.size());
+        final List<Resource> resources = ResultUtil.mergeAndDeDupe(pages, assets);
+        log.debug("LastModified combined resources -- [ {} ] results", resources.size());
+
+        Collections.sort(resources, new LastModifiedComparator());
+
+        for (final Resource resource : resources) {
+
+            final long lastModifiedTimestamp = LastModifiedUtil.getLastModifiedTimestamp(resource);
+            final String lastModifiedBy = LastModifiedUtil.getLastModifiedBy(resource);
+
+
+            final String description = resource.getPath()
+                    + " by "
+                    + lastModifiedBy
+                    + " at "
+                    + simpleDateFormat.format(lastModifiedTimestamp);
+
+            final OpenResult openResult = new OpenResult(resource);
+            openResult.setDescription(description);
+            results.add(openResult);
+        }
+
+        log.debug("Lastmod >> Execution time: {} ms",
+                System.currentTimeMillis() - start);
+
+        return results;
+    }
+
+
+    private List<Resource> getLastModifiedPages(final ResourceResolver resourceResolver, final Command cmd) {
         final String relativeDateRange = this.getRelativeDateRangeLowerBound(cmd);
 
-        map.put("10_group.p.or", "true");
+        return this.getLastModifiedQuery(resourceResolver, relativeDateRange,
+                NameConstants.NT_PAGE,  "@jcr:content/" + NameConstants.PN_LAST_MOD, MAX_QUERY_RESULTS);
+    }
 
-        map.put("10_group.11_group.p.or", "false");
-        map.put("10_group.11_group.1_type", "cq:Page");
-        map.put("10_group.11_group.2_relativedaterange.property", "@jcr:content/cq:lastModified");
-        map.put("10_group.11_group.2_relativedaterange.lowerBound", relativeDateRange);
+    private List<Resource> getLastModifiedAssets(final ResourceResolver resourceResolver, final Command cmd) {
+        final String relativeDateRange = this.getRelativeDateRangeLowerBound(cmd);
 
-        map.put("10_group.12_group.p.or", "false");
-        map.put("10_group.12_group.1_type", "dam:Asset");
-        map.put("10_group.12_group.2_relativedaterange.property", "@jcr:content/jcr:lastModified");
-        map.put("10_group.12_group.2_relativedaterange.lowerBound", relativeDateRange);
+        return this.getLastModifiedQuery(resourceResolver, relativeDateRange,
+                DamConstants.NT_DAM_ASSET,  "@jcr:content/" + JcrConstants.JCR_LASTMODIFIED, MAX_QUERY_RESULTS);
+    }
+
+    private List<Resource> getLastModifiedQuery(final ResourceResolver resourceResolver,
+                                                final String relativeDateRange,
+                                           final String nodeType, final String dateProperty, final int limit) {
+
+        final List<Resource> resources = new ArrayList<Resource>();
+        final Map<String, String> map = new HashMap<String, String>();
 
         map.put("path", "/content");
+        map.put("type", nodeType);
 
-        map.put("1_orderby", "@jcr:content/cq:lastModified");
-        map.put("2_orderby", "@jcr:content/jcr:lastModified");
+        map.put("relativedaterange.property", dateProperty);
+        map.put("relativedaterange.lowerBound", relativeDateRange);
 
-        map.put("1_orderby.sort", "desc");
-        map.put("2_orderby.sort", "desc");
+        map.put("orderby", dateProperty);
+        map.put("orderby.sort", "desc");
 
-        map.put("p.limit", "50");
+        map.put("p.limit", String.valueOf(limit));
 
         final Query query = queryBuilder.createQuery(PredicateGroup.create(map),
                 resourceResolver.adaptTo(Session.class));
@@ -123,56 +173,16 @@ public class LastModCommandHandlerImpl extends AbstractCommandHandler {
 
         for (final Hit hit : result.getHits()) {
             try {
-                final Resource resource = hit.getResource();
-                final ValueMap properties = hit.getProperties();
-
-                // Modified by User
-                final String modifiedBy =
-                        properties.get("cq:lastModifiedBy", properties.get("jcr:createdBy", "unknown"));
-
-                // Modified by Date and Time
-
-                // Page last modified
-                final Calendar cqLastModified = properties.get("cq:lastModified", Calendar.class);
-                // DAM Asset last modified
-                final Calendar jcrLastModified = properties.get("jcr:lastModified", Calendar.class);
-
-                // Normalized value
-                Calendar lastModified = null;
-
-                if(cqLastModified != null && jcrLastModified == null) {
-                    lastModified = cqLastModified;
-                } else if(cqLastModified == null && jcrLastModified != null) {
-                    lastModified = cqLastModified;
-                } else if(cqLastModified != null && jcrLastModified != null) {
-                    if(cqLastModified.after(jcrLastModified)) {
-                        lastModified = cqLastModified;
-                    } else {
-                        lastModified = jcrLastModified;
-                    }
-                }
-
-                String modifiedAtStr = "unknown";
-                if(lastModified != null) {
-                    modifiedAtStr = simpleDateFormat.format(lastModified.getTime());
-                }
-
-                final String description = resource.getPath()
-                        + " by "
-                        + modifiedBy
-                        + " at "
-                        + modifiedAtStr;
-
-                final OpenResult openResult = new OpenResult(hit.getResource());
-                openResult.setDescription(description);
-                results.add(openResult);
+                resources.add(hit.getResource());
             } catch (RepositoryException e) {
-                log.error("Could not access repository for hit: {}. Lucene index may be out of sync.", hit);
+                log.error("Error resolving Hit to Resource [ {} ]. "
+                        + "Likely issue with lucene index being out of sync.", hit.toString());
             }
         }
 
-        return results;
+        return resources;
     }
+
 
     private String getRelativeDateRangeLowerBound(final Command cmd) {
         final String defaultParam = "-1d";
