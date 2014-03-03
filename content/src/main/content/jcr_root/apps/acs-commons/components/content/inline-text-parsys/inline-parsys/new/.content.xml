@@ -1,4 +1,5 @@
-<%--
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
   ~ #%L
   ~ ACS AEM Commons Bundle
   ~ %%
@@ -16,17 +17,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   ~ #L%
-  --%>
+  -->
 
-<%@include file="/libs/foundation/global.jsp" %><%
-%><%@page session="false"
-          import="com.day.cq.wcm.api.WCMMode"%><%
-%><%
-    final WCMMode mode = WCMMode.fromRequest(slingRequest);
-    WCMMode.DISABLED.toRequest(slingRequest);
-
-    %><sling:include replaceSelectors="views.parsys"/><%
-
-    mode.toRequest(slingRequest);
-%>
-
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0"
+          xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+          jcr:primaryType="cq:Component"
+          sling:resourceSuperType="foundation/components/parsys/new"/>

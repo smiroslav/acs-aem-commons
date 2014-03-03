@@ -17,28 +17,32 @@
   ~ limitations under the License.
   ~ #L%
   --%>
-
 <%@include file="/libs/foundation/global.jsp" %><%
 %><%@page session="false"
-          import="com.day.cq.wcm.foundation.ParagraphSystem,
-          com.day.cq.wcm.foundation.Paragraph,
-          org.apache.commons.lang.StringUtils,
-          java.util.HashMap"%><%
+          import="com.day.cq.wcm.foundation.Paragraph,
+                  com.day.cq.wcm.foundation.ParagraphSystem,
+                  org.apache.commons.lang.StringUtils,
+                  java.util.Arrays"%><%
 %><%@ taglib prefix="wcmmode" uri="http://www.adobe.com/consulting/acs-aem-commons/wcmmode" %><%
 
-    final String delimiter = "</p>";
+    int index = 1;
+
+    final String parNamePrefix = component.getProperties().get("parNamePrefix", "inline-par-");
+    final String inlineParsysResourceType = component.getProperties().get("inlineParsysResourceType",
+            component.getResourceType() + "/inline-parsys");
+    final String delimiter = properties.get("delimiter", "</p>");
+
     final String text = properties.get("text", "");
 
+    final String[] textSegments = text.split("(?<=" + delimiter + ")");
     final ParagraphSystem paragraphSystem = ParagraphSystem.create(resource, slingRequest);
 
-    final String[] textParagraphs = StringUtils.splitByWholeSeparator(text, delimiter);
+    for(final String textParagraph : textSegments) {
+        %><cq:include path="<%= parNamePrefix + index %>"
+            resourceType="<%= inlineParsysResourceType %>"/><%
 
-    int index = 0;
-    for(final String textParagraph : textParagraphs) { %>
-        <cq:include path="<%= "inline-par" + index++ %>" resourceType="foundation/components/parsys"/><%
-        %><%= textParagraph %><%= delimiter %><%
+        %><%= textParagraph %><%
+
+        index++;
     }
-
 %>
-
-

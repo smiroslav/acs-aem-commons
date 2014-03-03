@@ -20,8 +20,39 @@
   -->
 
 <jcr:root xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
-    cq:actions="[text:Text Parsys,edit,annotate,delete]"
+    cq:actions="[text:Long Form Text,-,edit,annotate,delete]"
     cq:dialogMode="floating"
     cq:disableTargeting="{Boolean}true"
     cq:layout="editbar"
-    jcr:primaryType="cq:EditConfig"/>
+    jcr:primaryType="cq:EditConfig">
+    <cq:actionConfigs jcr:primaryType="nt:unstructured">
+        <separator-0
+                jcr:primaryType="nt:unstructured"
+                xtype="tbseparator"/>
+        <preview
+                jcr:primaryType="nt:unstructured"
+                handler="function(x,e){ ACS.CQ.wcm.LongFormText.handlePreview(this); }"
+                text="Preview"/>
+        <separator-1
+                jcr:primaryType="nt:unstructured"
+                xtype="tbseparator"/>
+        <edit-text
+                jcr:primaryType="nt:unstructured"
+                handler="function(x,e){ ACS.CQ.wcm.LongFormText.handleTextEdit(this); }"
+                text="Edit text"/>
+        <separator-2
+                jcr:primaryType="nt:unstructured"
+                xtype="tbseparator"/>
+        <edit-components
+                jcr:primaryType="nt:unstructured"
+                handler="function(x,e){ ACS.CQ.wcm.LongFormText.handleComponentsEdit(this);  }"
+                text="Edit components"/>
+        <separator-3
+                jcr:primaryType="nt:unstructured"
+                xtype="tbseparator"/>
+        <cancel
+                jcr:primaryType="nt:unstructured"
+                handler="function(x,e){ ACS.CQ.wcm.LongFormText.handleCancel(this);  }"
+                text="Cancel"/>
+    </cq:actionConfigs>
+</jcr:root>

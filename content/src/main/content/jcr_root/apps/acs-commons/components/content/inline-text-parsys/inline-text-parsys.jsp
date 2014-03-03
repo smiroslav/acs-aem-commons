@@ -17,26 +17,31 @@
   ~ limitations under the License.
   ~ #L%
   --%>
-
 <%@include file="/libs/foundation/global.jsp" %><%
 %><%@page session="false"
-          import="com.day.cq.wcm.foundation.ParagraphSystem,
-          com.day.cq.wcm.foundation.Paragraph,
-          org.apache.commons.lang.StringUtils,
-          com.adobe.acs.commons.wcm.tags.wcmmode.WCMModeFunctions,
-          com.day.cq.wcm.api.WCMMode,
-          java.util.HashMap"%>
-<%@ page import="com.adobe.acs.commons.wcm.tags.wcmmode.WCMModeFunctions" %><%
-    final String selectors = slingRequest.getRequestPathInfo().getSelectorString();
+          import="com.adobe.acs.commons.wcm.tags.wcmmode.WCMModeFunctions,
+                  com.day.cq.wcm.api.WCMMode"%><%
+
+    final WCMMode mode = WCMMode.fromRequest(slingRequest);
 
     if(!WCMModeFunctions.isEdit(pageContext)) {
-        %><sling:include replaceSelectors="views.main"/><%
-    } else {
-        if(StringUtils.equals("views.text", selectors)) {
-            %><sling:include replaceSelectors="views.text"/><%
-        } else {
-            %><sling:include replaceSelectors="clean-up"/><%
-            %><sling:include replaceSelectors="views.parsys"/><%
-        }
+        %><%--<sling:include replaceSelectors="clean-up"/>--%><%
+    }
+
+    if(!WCMModeFunctions.isDesign(pageContext)) {
+        WCMMode.DISABLED.toRequest(slingRequest);
+    }
+
+    // Editable parsys should only be accessible via direct access
+
+    %><sling:include replaceSelectors="views.parsys"/><%
+
+    if(!WCMModeFunctions.isDesign(pageContext)) {
+        mode.toRequest(slingRequest);
     }
 %>
+
+
+
+
+

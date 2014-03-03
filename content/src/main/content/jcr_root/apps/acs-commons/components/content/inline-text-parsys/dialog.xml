@@ -21,8 +21,7 @@
 
 <jcr:root xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
     jcr:primaryType="cq:Dialog"
-    title="Text Parsys"
-    width="600"
+    title="Long Form Text"
     xtype="dialog">
     <items
         jcr:primaryType="cq:Widget"
@@ -30,22 +29,23 @@
         <items jcr:primaryType="cq:WidgetCollection">
             <tab1
                 jcr:primaryType="cq:Panel"
-                title="Text">
+                title="Long Form Text">
                 <items jcr:primaryType="cq:WidgetCollection">
-                    <richtext
+                    <delimiter
                             jcr:primaryType="cq:Widget"
-                            fieldLabel="Rich Text"
+                            fieldLabel="Parsys insertion point"
                             fieldDescription=""
-                            defaultValue=""
-                            hideLabel="{Boolean}true"
-                            name="./text"
-                            xtype="richtext">
-                        <rtePlugins jcr:primaryType="nt:unstructured">
-                            <table
+                            defaultValue="</p>"
+                            name="./delimiter"
+                            type="select"
+                            xtype="selection">
+                        <options jcr:primaryType="cq:WidgetCollection">
+                            <end-of-paragraph
                                     jcr:primaryType="nt:unstructured"
-                                    features="*"/>
-                        </rtePlugins>
-                    </richtext>
+                                    text="End of paragraph"
+                                    value="</p>"/>
+                        </options>
+                    </delimiter>
                 </items>
             </tab1>
         </items>
