@@ -43,6 +43,7 @@ public abstract class AbstractResult implements Result {
     private String actionURI;
     private String actionMethod;
     private String actionTarget;
+    private String type;
     private boolean actionAsynchronous = false;
     private Map<String, String> actionParams;
 
@@ -51,13 +52,21 @@ public abstract class AbstractResult implements Result {
         return StringUtils.stripToNull(this.title);
     }
 
+    public String getType() {
+        if(StringUtils.isBlank(this.type)) {
+            return "unknown";
+        } else {
+            return StringUtils.trim(this.type);
+        }
+    }
+
     public String getDescription() {
         return StringUtils.stripToNull(this.description);
     }
 
     @Override
     public String getActionURI() {
-        if(StringUtils.isBlank(this.actionURI)) {
+        if (StringUtils.isBlank(this.actionURI)) {
             return DEFAULT_ACTION_URI;
         } else {
             return this.actionURI;
@@ -66,7 +75,7 @@ public abstract class AbstractResult implements Result {
 
     @Override
     public String getActionMethod() {
-        if(StringUtils.isBlank(this.actionMethod)) {
+        if (StringUtils.isBlank(this.actionMethod)) {
             return DEFAULT_ACTION_METHOD;
         } else {
             return this.actionMethod;
@@ -80,15 +89,16 @@ public abstract class AbstractResult implements Result {
 
     @Override
     public String getActionTarget() {
-        if(StringUtils.isBlank(this.actionTarget)) {
+        if (StringUtils.isBlank(this.actionTarget)) {
             return DEFAULT_ACTION_TARGET;
         } else {
             return this.actionTarget;
-        }     }
+        }
+    }
 
     @Override
     public Map<String, String> getActionParams() {
-        if(actionParams == null) {
+        if (actionParams == null) {
             return new HashMap<String, String>();
         } else {
             return actionParams;
@@ -97,6 +107,9 @@ public abstract class AbstractResult implements Result {
 
     public void setTitle(final String title) {
         this.title = title;
+    }
+    public void setType(final String type) {
+        this.type = type;
     }
 
     public void setDescription(final String description) {
@@ -141,6 +154,7 @@ public abstract class AbstractResult implements Result {
         final JSONObject actionParams = new JSONObject();
 
         result.put("title", this.getTitle());
+        result.put("type", this.getType());
         result.put("description", this.getDescription());
         result.put("path", this.getPath());
 
@@ -150,7 +164,7 @@ public abstract class AbstractResult implements Result {
         action.put("target", this.getActionTarget());
         action.put("xhr", this.isActionAsynchronous());
 
-        for(final Map.Entry<String, String> param : this.getActionParams().entrySet()) {
+        for (final Map.Entry<String, String> param : this.getActionParams().entrySet()) {
             actionParams.put(param.getKey(), param.getValue());
         }
 

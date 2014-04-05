@@ -18,11 +18,11 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.operations.AbstractOperation;
 import com.adobe.acs.commons.quickly.results.BasicResult;
 import com.adobe.acs.commons.util.CookieUtil;
 import org.apache.commons.lang.StringUtils;
@@ -45,18 +45,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Back Command Handler"
+        label = "ACS AEM Commons - Quickly - Back Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = BackCommandHandlerImpl.CMD,
+                value = BackOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class BackCommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(BackCommandHandlerImpl.class);
+public class BackOperationImpl extends AbstractOperation {
+    private static final Logger log = LoggerFactory.getLogger(BackOperationImpl.class);
 
     public static final String CMD = "back";
     public static final String COOKIE_NAME = "acs_quickly_back";

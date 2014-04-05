@@ -20,8 +20,15 @@
                          ng-click="app.selectResult(result)"
                          ng-class="{selected: result.selected, noop: result.action.method === 'noop' || !result.action.method, action: result.action.method !== 'noop', autocomplete: result.path}"
                          class="quickly-result">
-                        <h1 class="quickly-result-title">{{result.title}}</h1>
-                        <p class="quickly-result-description">{{result.description}}</p>
+
+                        <div class="quickly-result-icon {{result.type}}"></div>
+
+                        <div class="quickly-result-text-block">
+                            <h1 class="quickly-result-title">{{result.title}}</h1>
+                            <p class="quickly-result-description">{{result.description}}</p>
+                        </div>
+
+                        <div class="clear"></div>
                     </li>
                 </ul>
 

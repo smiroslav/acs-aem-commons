@@ -18,20 +18,18 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
-import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.adobe.acs.commons.quickly.comparators.LexicographicalResourcePathComparator;
-import com.adobe.acs.commons.quickly.results.CRXDEResult;
 import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
+import com.adobe.acs.commons.quickly.Result;
+import com.adobe.acs.commons.quickly.comparators.PathRelevanceComparator;
+import com.adobe.acs.commons.quickly.operations.AbstractOperation;
+import com.adobe.acs.commons.quickly.results.OpenResult;
+import com.day.cq.dam.api.DamConstants;
+import com.day.cq.wcm.api.NameConstants;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -43,20 +41,20 @@ import java.util.Collections;
 import java.util.List;
 
 @Component(
-        label = "ACS AEM Commons - Quickly - CRXDE Command Handler"
+        label = "ACS AEM Commons - Quickly - Go Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = CRXDECommandHandlerImpl.CMD,
+                value = OpenOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(CRXDECommandHandlerImpl.class);
+public class OpenOperationImpl extends AbstractOperation {
+    private static final Logger log = LoggerFactory.getLogger(OpenOperationImpl.class);
 
-    public static final String CMD = "crxde";
+    public static final String CMD = "open";
 
     @Reference
     private PathBasedResourceFinder pathBasedResourceFinder;
@@ -68,40 +66,32 @@ public class CRXDECommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final List<Result> results = new ArrayList<Result>();
-
-        results.add(new CRXDEResult());
-
-        return results;
+        return Collections.EMPTY_LIST;
     }
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final long start = System.currentTimeMillis();
-
         final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
+
         final List<Result> results = new ArrayList<Result>();
 
+        /** Find Path-based Matching Resources **/
+
         final List<Resource> resources = pathBasedResourceFinder.findAll(resourceResolver,
-               cmd.getParam(),
-               PathBasedResourceFinder.DEFAULT_QUERY_LIMIT);
+                cmd.getParam(),
+                PathBasedResourceFinder.DEFAULT_QUERY_LIMIT,
+                NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
 
+        /** Sort by custom relevance **/
+        Collections.sort(resources, new PathRelevanceComparator());
 
-        // Sorting is Command specific; Sort by path in crxde
+        /** Accepts **/
 
-        Collections.sort(resources, new LexicographicalResourcePathComparator());
-
-        if (resources.isEmpty()) {
-            results.addAll(this.withoutParams(slingRequest, cmd));
-        } else {
-            for(final Resource resource : resources) {
-                if(CRXDEResult.accepts(resource)) {
-                    results.add(new CRXDEResult(resource));
-                }
+        for(final Resource resource : resources) {
+            if(OpenResult.accepts(resource)) {
+                results.add(new OpenResult(resource));
             }
         }
-
-        log.debug("CRXDE w/ Params({}) >> Execution time: {} ms", cmd.getParam(), System.currentTimeMillis() - start);
 
         return results;
     }

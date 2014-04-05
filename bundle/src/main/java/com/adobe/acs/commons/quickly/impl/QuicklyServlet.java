@@ -26,9 +26,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -37,7 +36,7 @@ import java.io.IOException;
         label = "ACS AEM Commons - Quickly Servlet",
         paths = "/bin/quickly.json"
 )
-public class QuicklyServlet extends SlingAllMethodsServlet {
+public class QuicklyServlet extends SlingSafeMethodsServlet {
 
     @Reference
     private QuicklyEngine quicklyEngine;
@@ -56,21 +55,4 @@ public class QuicklyServlet extends SlingAllMethodsServlet {
             // TODO ERROR
         }
     }
-
-    /**
-     * Handles the execution of
-     *
-     * @param request
-     * @param response
-     * @throws ServletException
-     * @throws IOException
-     */
-    @Override
-    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws ServletException, IOException {
-        final Command cmd = new Command(request);
-
-        final JSONObject json = new JSONObject();
-    }
-
 }

@@ -18,11 +18,11 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.operations.AbstractOperation;
 import com.adobe.acs.commons.quickly.comparators.PathRelevanceComparator;
 import com.adobe.acs.commons.quickly.results.GoResult;
 import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
@@ -48,18 +48,18 @@ import java.util.List;
 import java.util.Map;
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Go Command Handler"
+        label = "ACS AEM Commons - Quickly - Go Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = GoCommandHandlerImpl.CMD,
+                value = GoOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class GoCommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(GoCommandHandlerImpl.class);
+public class GoOperationImpl extends AbstractOperation {
+    private static final Logger log = LoggerFactory.getLogger(GoOperationImpl.class);
 
     public static final String CMD = "go";
 

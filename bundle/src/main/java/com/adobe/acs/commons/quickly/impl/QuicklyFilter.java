@@ -93,12 +93,6 @@ public class QuicklyFilter implements Filter {
     @Override
     public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse,
                          final FilterChain filterChain) throws IOException, ServletException {
-        if (!(servletRequest instanceof SlingHttpServletRequest)
-                || !(servletResponse instanceof SlingHttpServletResponse)) {
-            filterChain.doFilter(servletRequest, servletResponse);
-            return;
-        }
-
         final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) servletRequest;
         final SlingHttpServletResponse slingResponse = (SlingHttpServletResponse) servletResponse;
 
@@ -119,8 +113,6 @@ public class QuicklyFilter implements Filter {
 
                 final int bodyIndex = contents.indexOf("</body>");
                 if (bodyIndex != -1) {
-
-                    log.debug("Quickly injection: {}", slingRequest.getRequestURI());
 
                     final PrintWriter printWriter = slingResponse.getWriter();
                     //printWriter.write(contents.substring(0, headIndex));

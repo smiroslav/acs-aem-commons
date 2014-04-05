@@ -18,18 +18,18 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands;
+package com.adobe.acs.commons.quickly.operations;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.impl.DefaultCommandHandlerImpl;
+import com.adobe.acs.commons.quickly.operations.impl.DefaultOperationImpl;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.json.JSONException;
 
 import java.util.Collection;
 
-public interface CommandHandler {
-    final String DEFAULT_CMD = DefaultCommandHandlerImpl.CMD;
+public interface Operation {
+    final String DEFAULT_CMD = DefaultOperationImpl.CMD;
     final String PROP_CMD = "cmd";
 
     boolean accepts(SlingHttpServletRequest slingRequest, Command cmd);

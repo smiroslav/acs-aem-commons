@@ -18,7 +18,7 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
@@ -33,18 +33,18 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Go Command Handler"
+        label = "ACS AEM Commons - Quickly - Go Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = DefaultCommandHandlerImpl.CMD,
+                value = DefaultOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class DefaultCommandHandlerImpl extends GoCommandHandlerImpl {
-    private static final Logger log = LoggerFactory.getLogger(DefaultCommandHandlerImpl.class);
+public class DefaultOperationImpl extends GoOperationImpl {
+    private static final Logger log = LoggerFactory.getLogger(DefaultOperationImpl.class);
 
     public static final String CMD = "default";
 
@@ -60,7 +60,7 @@ public class DefaultCommandHandlerImpl extends GoCommandHandlerImpl {
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final Command wrappedCmd = new Command(GoCommandHandlerImpl.CMD + " " + cmd.toString());
+        final Command wrappedCmd = new Command(GoOperationImpl.CMD + " " + cmd.toString());
         return super.withParams(slingRequest, wrappedCmd);
     }
 }

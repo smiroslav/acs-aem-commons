@@ -18,7 +18,7 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands;
+package com.adobe.acs.commons.quickly.operations;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class AbstractCommandHandler implements CommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(AbstractCommandHandler.class);
+public abstract class AbstractOperation implements Operation {
+    private static final Logger log = LoggerFactory.getLogger(AbstractOperation.class);
 
     @Override
     public Collection<Result> getResults(final SlingHttpServletRequest slingRequest,
