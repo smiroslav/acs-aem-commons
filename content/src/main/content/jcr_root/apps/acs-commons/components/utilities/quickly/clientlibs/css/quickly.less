@@ -92,29 +92,68 @@
           cursor: hand;
         }
 
-        .quickly-result-title {
-          border: 0;
-          color: #666;
-          margin: 0;
-          padding: 0;
-          text-align: left;
-          white-space: pre-wrap;
-          word-break: break-word;
-
+        .quickly-result-icon {
           .normalized-text(1.5em);
+
+          color: #ccc;
+          font-family: AdobeIcons;
+          width: 1.5em;
+          float: left;
+          vertical-align: middle;
         }
 
-        .quickly-result-description {
-          color: #999;
-          font-style: italic;
-          margin: .25em 0 0 0;
-          padding: 0;
-          text-align: left;
-          white-space: pre-wrap;
-          word-break: break-word;
+        .quickly-result-icon.unknown:before {
+            content: "\f051";
+        }
 
-          .normalized-text(1em);
+        .quickly-result-icon.social:before {
+          content: "\f031";
+        }
 
+        .quickly-result-icon.asset-image:before {
+          content: "\f080";
+        }
+
+        .quickly-result-icon.asset-video:before {
+          content: "\f05b";
+        }
+
+        .quickly-result-icon.tag:before {
+          content: "\f0c5";
+        }
+
+        .quickly-result-icon.page:before {
+          content: "\f064";
+        }
+
+
+        .quickly-result-text-block {
+          margin-left: 2.25em;
+
+          .quickly-result-title {
+            border: 0;
+            color: #666;
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            white-space: pre-wrap;
+            word-break: break-word;
+
+            .normalized-text(1.5em);
+          }
+
+          .quickly-result-description {
+            color: #999;
+            font-style: italic;
+            margin: .25em 0 0 0;
+            padding: 0;
+            text-align: left;
+            white-space: pre-wrap;
+            word-break: break-word;
+
+            .normalized-text(1em);
+
+          }
         }
       }
     }
@@ -130,6 +169,10 @@
         color: #333;
       }
     }
+  }
+
+  .clear {
+    clear: both;
   }
 }
 

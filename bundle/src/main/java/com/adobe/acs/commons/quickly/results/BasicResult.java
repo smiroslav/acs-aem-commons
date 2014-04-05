@@ -26,10 +26,6 @@ import org.slf4j.LoggerFactory;
 public class BasicResult extends AbstractResult {
     private static final Logger log = LoggerFactory.getLogger(BasicResult.class);
 
-    public BasicResult() {
-
-    }
-
     public BasicResult(final String title, final String description, final String actionURI) {
         this.setTitle(title);
         this.setDescription(description);

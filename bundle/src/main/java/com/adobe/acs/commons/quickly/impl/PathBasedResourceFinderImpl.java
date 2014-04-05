@@ -284,7 +284,7 @@ public class PathBasedResourceFinderImpl implements PathBasedResourceFinder {
         for(final Resource fragmentLeaf : fragmentLeaves) {
             final Matcher matcher = pattern.matcher(fragmentLeaf.getPath());
 
-            if(matcher.matches()) {
+             if(matcher.matches()) {
                 // Add leaf and its children
                 resources = this.getChildren(true, fragmentLeaf, null);
             }

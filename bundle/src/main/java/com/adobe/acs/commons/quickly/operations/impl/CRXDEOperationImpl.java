@@ -18,17 +18,14 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
-import com.adobe.acs.commons.quickly.comparators.PathRelevanceComparator;
-import com.adobe.acs.commons.quickly.results.OpenResult;
+import com.adobe.acs.commons.quickly.operations.AbstractOperation;
+import com.adobe.acs.commons.quickly.comparators.LexicographicalResourcePathComparator;
+import com.adobe.acs.commons.quickly.results.CRXDEResult;
 import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
-import com.day.cq.dam.api.DamConstants;
-import com.day.cq.search.QueryBuilder;
-import com.day.cq.wcm.api.NameConstants;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -46,23 +43,20 @@ import java.util.Collections;
 import java.util.List;
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Go Command Handler"
+        label = "ACS AEM Commons - Quickly - CRXDE Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = OpenCommandHandlerImpl.CMD,
+                value = CRXDEOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class OpenCommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(OpenCommandHandlerImpl.class);
+public class CRXDEOperationImpl extends AbstractOperation {
+    private static final Logger log = LoggerFactory.getLogger(CRXDEOperationImpl.class);
 
-    public static final String CMD = "open";
-
-    @Reference
-    private QueryBuilder queryBuilder;
+    public static final String CMD = "crxde";
 
     @Reference
     private PathBasedResourceFinder pathBasedResourceFinder;
@@ -74,32 +68,40 @@ public class OpenCommandHandlerImpl extends AbstractCommandHandler {
 
     @Override
     protected List<Result> withoutParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        return Collections.EMPTY_LIST;
+        final List<Result> results = new ArrayList<Result>();
+
+        results.add(new CRXDEResult());
+
+        return results;
     }
 
     @Override
     protected List<Result> withParams(final SlingHttpServletRequest slingRequest, final Command cmd) {
-        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
+        final long start = System.currentTimeMillis();
 
+        final ResourceResolver resourceResolver = slingRequest.getResourceResolver();
         final List<Result> results = new ArrayList<Result>();
 
-        /** Find Path-based Matching Resources **/
-
         final List<Resource> resources = pathBasedResourceFinder.findAll(resourceResolver,
-                cmd.getParam(),
-                PathBasedResourceFinder.DEFAULT_QUERY_LIMIT,
-                NameConstants.NT_PAGE, DamConstants.NT_DAM_ASSET);
+               cmd.getParam(),
+               PathBasedResourceFinder.DEFAULT_QUERY_LIMIT);
 
-        /** Sort by custom relevance **/
-        Collections.sort(resources, new PathRelevanceComparator());
 
-        /** Accepts **/
+        // Sorting is Command specific; Sort by path in crxde
 
-        for(final Resource resource : resources) {
-            if(OpenResult.accepts(resource)) {
-                results.add(new OpenResult(resource));
+        Collections.sort(resources, new LexicographicalResourcePathComparator());
+
+        if (resources.isEmpty()) {
+            results.addAll(this.withoutParams(slingRequest, cmd));
+        } else {
+            for(final Resource resource : resources) {
+                if(CRXDEResult.accepts(resource)) {
+                    results.add(new CRXDEResult(resource));
+                }
             }
         }
+
+        log.debug("CRXDE w/ Params({}) >> Execution time: {} ms", cmd.getParam(), System.currentTimeMillis() - start);
 
         return results;
     }

@@ -34,7 +34,7 @@ public class PathRelevanceComparator implements Comparator<Resource> {
     private static final int WCM_PAGE = 1000;
     private static final int DAM = 900;
     private static final int WCM_CAMPAIGNS = 780;
-    private static final int WCM_USERGENERATED = 770;
+    private static final int WCM_USER_GENERATED = 770;
     private static final int WCM_CATALOGS = 760;
     private static final int WCM_COMMUNITIES = 750;
 
@@ -70,7 +70,7 @@ public class PathRelevanceComparator implements Comparator<Resource> {
             } else if(StringUtils.startsWith(path, "/content/campaigns/")) {
                 return WCM_CAMPAIGNS;
             } else if(StringUtils.startsWith(path, "/content/usergenerated/")) {
-                return WCM_USERGENERATED;
+                return WCM_USER_GENERATED;
             } else if(StringUtils.startsWith(path, "/content/communities/")) {
                 return WCM_COMMUNITIES;
             } else if(StringUtils.startsWith(path, "/content/catalogs/")) {

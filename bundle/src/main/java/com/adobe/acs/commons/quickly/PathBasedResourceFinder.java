@@ -25,7 +25,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 
 import java.util.List;
 
-public interface PathBasedResourceFinder {
+public interface    PathBasedResourceFinder {
     public static final int DEFAULT_QUERY_LIMIT = 100;
 
     List<Resource> findByAbsolutePath(ResourceResolver resourceResolver, String path);

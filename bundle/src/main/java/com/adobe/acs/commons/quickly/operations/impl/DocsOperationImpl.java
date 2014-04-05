@@ -18,11 +18,11 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.operations.AbstractOperation;
 import com.adobe.acs.commons.quickly.results.BasicResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -40,18 +40,18 @@ import java.util.Map;
 
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Docs Command Handler"
+        label = "ACS AEM Commons - Quickly - Docs Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = DocsCommandHandlerImpl.CMD,
+                value = DocsOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class DocsCommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(DocsCommandHandlerImpl.class);
+public class DocsOperationImpl extends AbstractOperation {
+    private static final Logger log = LoggerFactory.getLogger(DocsOperationImpl.class);
 
     public static final String CMD = "docs";
 

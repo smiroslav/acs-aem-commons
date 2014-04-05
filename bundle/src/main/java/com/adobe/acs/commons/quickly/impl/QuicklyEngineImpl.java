@@ -23,7 +23,7 @@ package com.adobe.acs.commons.quickly.impl;
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.QuicklyEngine;
 import com.adobe.acs.commons.quickly.Result;
-import com.adobe.acs.commons.quickly.commands.CommandHandler;
+import com.adobe.acs.commons.quickly.operations.Operation;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -45,7 +45,7 @@ import java.util.Map;
 @Component
 @Reference(
         name = "commandHandlers",
-        referenceInterface = CommandHandler.class,
+        referenceInterface = Operation.class,
         policy = ReferencePolicy.DYNAMIC,
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
 )
@@ -55,20 +55,20 @@ public class QuicklyEngineImpl implements QuicklyEngine {
 
     private static final String KEY_RESULTS = "results";
 
-    @Reference(target = "(cmd=" + CommandHandler.DEFAULT_CMD + ")")
-    private CommandHandler defaultCommandHandler;
+    @Reference(target = "(cmd=" + Operation.DEFAULT_CMD + ")")
+    private Operation defaultOperation;
 
-    private Map<String, CommandHandler> commandHandlers = new HashMap<String, CommandHandler>();
+    private Map<String, Operation> commandHandlers = new HashMap<String, Operation>();
 
     @Override
     public JSONObject execute(final SlingHttpServletRequest slingRequest, final Command cmd) throws JSONException {
-        for (Map.Entry<String, CommandHandler> commandHandler : commandHandlers.entrySet()) {
+        for (Map.Entry<String, Operation> commandHandler : commandHandlers.entrySet()) {
             if (commandHandler.getValue().accepts(slingRequest, cmd)) {
                 return this.getJSONResults(commandHandler.getValue().getResults(slingRequest, cmd));
             }
         }
 
-        return this.getJSONResults(defaultCommandHandler.getResults(slingRequest, cmd));
+        return this.getJSONResults(defaultOperation.getResults(slingRequest, cmd));
     }
 
     private JSONObject getJSONResults(final Collection<Result> results) throws JSONException {
@@ -87,19 +87,19 @@ public class QuicklyEngineImpl implements QuicklyEngine {
 
 
     // Bind
-    protected void bindCommandHandlers(final CommandHandler service, final Map<Object, Object> props) {
-        final String cmd = PropertiesUtil.toString(props.get(CommandHandler.PROP_CMD), null);
+    protected void bindCommandHandlers(final Operation service, final Map<Object, Object> props) {
+        final String cmd = PropertiesUtil.toString(props.get(Operation.PROP_CMD), null);
 
-        if (cmd != null && !StringUtils.equalsIgnoreCase(CommandHandler.DEFAULT_CMD, cmd)) {
+        if (cmd != null && !StringUtils.equalsIgnoreCase(Operation.DEFAULT_CMD, cmd)) {
             commandHandlers.put(cmd, service);
         }
     }
 
     // Unbind
-    protected void unbindCommandHandlers(final CommandHandler service, final Map<Object, Object> props) {
-        final String cmd = PropertiesUtil.toString(props.get(CommandHandler.PROP_CMD), null);
+    protected void unbindCommandHandlers(final Operation service, final Map<Object, Object> props) {
+        final String cmd = PropertiesUtil.toString(props.get(Operation.PROP_CMD), null);
 
-        if (cmd != null && !StringUtils.equalsIgnoreCase(CommandHandler.DEFAULT_CMD, cmd)) {
+        if (cmd != null && !StringUtils.equalsIgnoreCase(Operation.DEFAULT_CMD, cmd)) {
             commandHandlers.remove(cmd);
         }
     }

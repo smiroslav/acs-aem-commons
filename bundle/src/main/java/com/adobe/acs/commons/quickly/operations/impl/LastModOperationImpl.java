@@ -18,14 +18,14 @@
  * #L%
  */
 
-package com.adobe.acs.commons.quickly.commands.impl;
+package com.adobe.acs.commons.quickly.operations.impl;
 
 import com.adobe.acs.commons.quickly.Command;
 import com.adobe.acs.commons.quickly.LastModifiedUtil;
 import com.adobe.acs.commons.quickly.PathBasedResourceFinder;
 import com.adobe.acs.commons.quickly.Result;
 import com.adobe.acs.commons.quickly.ResultUtil;
-import com.adobe.acs.commons.quickly.commands.AbstractCommandHandler;
+import com.adobe.acs.commons.quickly.operations.AbstractOperation;
 import com.adobe.acs.commons.quickly.comparators.LastModifiedComparator;
 import com.adobe.acs.commons.quickly.results.InfoResult;
 import com.adobe.acs.commons.quickly.results.OpenResult;
@@ -59,25 +59,23 @@ import java.util.List;
 import java.util.Map;
 
 @Component(
-        label = "ACS AEM Commons - Quickly - Go Command Handler"
+        label = "ACS AEM Commons - Quickly - Go Operation"
 )
 @Properties({
         @Property(
                 name = "cmd",
-                value = LastModCommandHandlerImpl.CMD,
+                value = LastModOperationImpl.CMD,
                 propertyPrivate = true
         )
 })
 @Service
-public class LastModCommandHandlerImpl extends AbstractCommandHandler {
-    private static final Logger log = LoggerFactory.getLogger(LastModCommandHandlerImpl.class);
+public class LastModOperationImpl extends AbstractOperation {
+    private static final Logger log = LoggerFactory.getLogger(LastModOperationImpl.class);
 
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy @ hh:mm aaa");
     private static final int MAX_QUERY_RESULTS = 25;
 
     public static final String CMD = "lastmod";
-
-
 
     @Reference
     private QueryBuilder queryBuilder;

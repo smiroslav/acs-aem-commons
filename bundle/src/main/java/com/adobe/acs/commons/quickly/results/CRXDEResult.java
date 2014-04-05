@@ -23,6 +23,7 @@ package com.adobe.acs.commons.quickly.results;
 import org.apache.sling.api.resource.Resource;
 
 public class CRXDEResult extends AbstractResult {
+
     public CRXDEResult() {
         this.setTitle("CRXDE Lite");
         this.setDescription("/crx/de/index.jsp");
