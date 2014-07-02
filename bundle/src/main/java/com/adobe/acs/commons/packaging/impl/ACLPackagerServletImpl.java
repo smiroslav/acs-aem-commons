@@ -73,6 +73,8 @@ import java.util.regex.Pattern;
 public class ACLPackagerServletImpl extends SlingAllMethodsServlet {
     private static final Logger log = LoggerFactory.getLogger(ACLPackagerServletImpl.class);
 
+    private static final String INCLUDE_ONLY_ACE = "includeOnlyACE";
+
     private static final String INCLUDE_PATTERNS = "includePatterns";
 
     private static final String PRINCIPAL_NAMES = "principalNames";
@@ -101,6 +103,8 @@ public class ACLPackagerServletImpl extends SlingAllMethodsServlet {
 
     private static final String DEFAULT_PACKAGE_DESCRIPTION = "ACL Package initially defined by a ACS AEM Commons - "
             + "ACL Packager configuration.";
+
+    private static final boolean DEFAULT_INCLUDE_ONLY_ACE = false;
 
     private static final boolean DEFAULT_INCLUDE_PRINCIPALS = false;
 
@@ -134,7 +138,8 @@ public class ACLPackagerServletImpl extends SlingAllMethodsServlet {
 
         final Set<Resource> packageResources = this.findResources(resourceResolver,
                 Arrays.asList(principalNames),
-                toPatterns(Arrays.asList(properties.get(INCLUDE_PATTERNS, new String[]{}))));
+                toPatterns(Arrays.asList(properties.get(INCLUDE_PATTERNS, new String[]{}))),
+                properties.get(INCLUDE_ONLY_ACE, DEFAULT_INCLUDE_ONLY_ACE));
 
         try {
             // Add Principals
@@ -220,7 +225,8 @@ public class ACLPackagerServletImpl extends SlingAllMethodsServlet {
      */
     private Set<Resource> findResources(final ResourceResolver resourceResolver,
                                         final List<String> principalNames,
-                                        final List<Pattern> includePatterns) {
+                                        final List<Pattern> includePatterns,
+                                        final boolean includeOnlyACE) {
         final Set<Resource> resources = new TreeSet<Resource>(resourceComparator);
 
         final Iterator<Resource> repPolicies = resourceResolver.findResources(QUERY, QUERY_LANG);
@@ -244,9 +250,16 @@ public class ACLPackagerServletImpl extends SlingAllMethodsServlet {
                 if (principalNames == null
                         || principalNames.isEmpty()
                         || principalNames.contains(repPrincipalName)) {
-                    resources.add(repPolicy);
-                    log.debug("Included by principal [ {} ]", repPolicy.getPath());
-                    break;
+                    if(includeOnlyACE) {
+                        resources.add(ace);
+                        log.debug("Included ACE by principal [ {} ]", ace.getPath());
+                        // Continue through the rest of the ACE's since there may be more for this principal
+                    } else {
+                        resources.add(repPolicy);
+                        log.debug("Included rep:policy by principal [ {} ]", repPolicy.getPath());
+                        // Break since with rep:policy all that is required is one match on an ACE
+                        break;
+                    }
                 }
             }
         }

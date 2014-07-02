@@ -25,6 +25,7 @@ import com.day.jcr.vault.packaging.JcrPackage;
 import com.day.jcr.vault.packaging.JcrPackageManager;
 import com.day.jcr.vault.packaging.Version;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -143,6 +144,8 @@ public class ACLPackagerServletImplTest {
     }
 
 
+
+
     @Test
     public void testDoPost_preview() throws Exception {
         final String resourcePath = "/etc/acs-commons/packages/acl-packager-test/jcr:content";
@@ -215,8 +218,38 @@ public class ACLPackagerServletImplTest {
             this.addResource(new MockResource(this, "/home/groups/authors/rep:policy/allow0", ""));
         }
 
+        @Override
+        public Iterable<Resource> getChildren(final Resource resource) {
+            return null;
+        }
+
         public Iterator<Resource> findResources(String query, String language) {
             return this.results.iterator();
+        }
+
+        @Override
+        public void delete(final Resource resource) throws PersistenceException {
+
+        }
+
+        @Override
+        public Resource create(final Resource resource, final String s, final Map<String, Object> stringObjectMap) throws PersistenceException {
+            return null;
+        }
+
+        @Override
+        public void revert() {
+
+        }
+
+        @Override
+        public void commit() throws PersistenceException {
+
+        }
+
+        @Override
+        public boolean hasChanges() {
+            return false;
         }
 
         @SuppressWarnings("unchecked")
@@ -243,8 +276,38 @@ public class ACLPackagerServletImplTest {
             }
         }
 
+        @Override
+        public Iterable<Resource> getChildren(final Resource resource) {
+            return null;
+        }
+
         public Iterator<Resource> findResources(String query, String language) {
             return this.results.iterator();
+        }
+
+        @Override
+        public void delete(final Resource resource) throws PersistenceException {
+
+        }
+
+        @Override
+        public Resource create(final Resource resource, final String s, final Map<String, Object> stringObjectMap) throws PersistenceException {
+            return null;
+        }
+
+        @Override
+        public void revert() {
+
+        }
+
+        @Override
+        public void commit() throws PersistenceException {
+
+        }
+
+        @Override
+        public boolean hasChanges() {
+            return false;
         }
 
         @SuppressWarnings("unchecked")

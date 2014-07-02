@@ -32,6 +32,7 @@
     final String packageACLHandling = properties.get("packageACLHandling", "Overwrite");
     final String conflictResolution = properties.get("conflictResolution", "IncrementVersion");
 
+    final boolean includeOnlyACE = properties.get("includeOnlyACE", false);
     final boolean includePrincipals = properties.get("includePrincipals", false);
     final boolean includeConfiguration = properties.get("includeConfiguration", false);
 %>
@@ -44,6 +45,7 @@
     <li>Package description: <%= xssAPI.encodeForHTML(packageDescription) %></li>
     <li>Package ACL handling: <%= xssAPI.encodeForHTML(packageACLHandling) %></li>
     <li>Conflict resolution: <%= xssAPI.encodeForHTML(conflictResolution) %></li>
+    <li>Include only ACEs: <%= includeOnlyACE %></li>
     <li>Include principals: <%= includePrincipals %></li>
     <li>Include ACL packager page: <%= includeConfiguration %></li>
 </ul>
