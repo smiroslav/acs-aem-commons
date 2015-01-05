@@ -269,8 +269,10 @@ public class HttpRequestLogger implements Filter {
         // Headers
         if (!acceptHeaders.isEmpty()) {
             boolean foundMatchingHeader = false;
+
             for (Map.Entry<String, Pattern> entry : acceptHeaders.entrySet()) {
-                String headerValue = request.getHeader(entry.getKey());
+                final String headerValue = request.getHeader(entry.getKey());
+
                 if (StringUtils.isNotBlank(headerValue)) {
                     final Matcher matcher = entry.getValue().matcher(headerValue);
                     if (matcher.matches()) {
@@ -309,6 +311,14 @@ public class HttpRequestLogger implements Filter {
             acceptHeaders.put(entry.getKey(), pattern);
         }
 
+        // Blacklist Headers
+        blacklistHeaders = PropertiesUtil.toStringArray(config.get(PROP_BLACKLIST_HEADERS),
+                DEFAULT_BLACKLIST_HEADERS);
+
+        // Blacklist Parameters
+        blacklistParameters = PropertiesUtil.toStringArray(config.get(PROP_BLACKLIST_PARAMETERS),
+                DEFAULT_BLACKLIST_PARAMETERS);
+
         if (enabled) {
             Dictionary<String, String> filterProps = new Hashtable<String, String>();
             filterProps.put(Constants.SERVICE_RANKING, String.valueOf(Integer.MIN_VALUE));
@@ -316,16 +326,8 @@ public class HttpRequestLogger implements Filter {
             filterRegistration = ctx.getBundleContext().registerService(Filter.class.getName(), this, filterProps);
         }
 
-        // Blacklist Headers
-        blacklistHeaders = PropertiesUtil.toStringArray(config.get(PROP_BLACKLIST_HEADERS),
-                DEFAULT_BLACKLIST_HEADERS);
-
-        // Blacklist Headers
-        blacklistParameters = PropertiesUtil.toStringArray(config.get(PROP_BLACKLIST_PARAMETERS),
-                DEFAULT_BLACKLIST_PARAMETERS);
-
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
 
         pw.println();
         pw.printf("Enabled: %s", enabled).println();
@@ -340,7 +342,6 @@ public class HttpRequestLogger implements Filter {
         log.info(sw.toString());
     }
 
-
     @Deactivate
     protected final void deactivate(final Map<String, String> config) {
         if (filterRegistration != null) {
@@ -351,5 +352,7 @@ public class HttpRequestLogger implements Filter {
         enabled = false;
         acceptHeaders.clear();
         acceptPaths = DEFAULT_ACCEPT_PATHS;
+        blacklistParameters = DEFAULT_BLACKLIST_PARAMETERS;
+        blacklistHeaders = DEFAULT_BLACKLIST_HEADERS;
     }
 }
