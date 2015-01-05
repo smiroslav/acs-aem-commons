@@ -2,7 +2,7 @@
  * #%L
  * ACS AEM Commons Bundle
  * %%
- * Copyright (C) 2013 Adobe
+ * Copyright (C) 2014 Adobe
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@
 
 package com.adobe.acs.commons.logging.impl;
 
+import com.adobe.acs.commons.requestwrappers.MultiReadHttpServletRequest;
 import com.adobe.acs.commons.util.OsgiPropertyUtil;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
@@ -51,6 +53,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,8 +66,7 @@ import java.util.regex.Pattern;
 public class HttpRequestLogger implements Filter {
     private static final Logger log = LoggerFactory.getLogger(HttpRequestLogger.class);
 
-    private static final String LINE =
-            "----------------------------------------------------------------------------------";
+    private static final String LINE = StringUtils.repeat("-", 80);
 
     private static final boolean DEFAULT_ENABLED = true;
     private boolean enabled = DEFAULT_ENABLED;
@@ -72,6 +74,11 @@ public class HttpRequestLogger implements Filter {
             boolValue = DEFAULT_ENABLED)
     public static final String PROP_ENABLED = "enabled";
 
+    private static final boolean DEFAULT_SHOW_RAW = false;
+    private boolean showRaw = DEFAULT_SHOW_RAW;
+    @Property(label = "Show Raw",
+            boolValue = DEFAULT_SHOW_RAW)
+    public static final String PROP_SHOW_RAW = "show-raw";
 
     private static final String[] DEFAULT_ACCEPT_HEADERS = new String[]{};
     private Map<String, Pattern> acceptHeaders = new HashMap<String, Pattern>();
@@ -111,9 +118,16 @@ public class HttpRequestLogger implements Filter {
                          final FilterChain filterChain) throws IOException, ServletException {
 
         if (servletRequest instanceof HttpServletRequest) {
-            final HttpServletRequest request = (HttpServletRequest) servletRequest;
 
-            if (accepts(request)) {
+            final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+
+            if (accepts(httpServletRequest)) {
+
+                // Use the Multi-Read Http Servlet Request wrapper as this Filter (can) read
+                // POST parameters which will make them inaccessible further down the filter chain
+                final MultiReadHttpServletRequest request =
+                        new MultiReadHttpServletRequest((HttpServletRequest) servletRequest);
+
                 final StringWriter sw = new StringWriter();
                 final PrintWriter pw = new PrintWriter(sw);
 
@@ -121,17 +135,24 @@ public class HttpRequestLogger implements Filter {
 
                 pw.println(LINE);
 
-                pw.printf("[ %s ] %s", request.getMethod().toUpperCase(), request.getRequestURI());
-                pw.println();
+                pw.printf("[ %s ] %s", request.getMethod().toUpperCase(), request.getRequestURI()).println();
                 pw.println(request.getRequestURL().toString());
 
                 printHeaders(request, pw);
                 printParameters(request, pw);
                 printMiscRequestInfo(request, pw);
 
+                if (this.showRaw) {
+                    printRaw(request, pw);
+                }
+
                 pw.println(LINE);
 
                 log.trace(sw.toString());
+
+                // Call the filter chain w the Multi-Readable Http Servlet Request
+                filterChain.doFilter(request, servletResponse);
+                return;
             }
         }
 
@@ -141,86 +162,65 @@ public class HttpRequestLogger implements Filter {
     private void printMiscRequestInfo(HttpServletRequest request, PrintWriter pw) {
         pw.println(LINE);
 
-        pw.printf("Protocol: %s", request.getProtocol());
-        pw.println();
+        pw.printf("Protocol: %s", request.getProtocol()).println();
 
-        pw.printf("Method: %s", request.getMethod());
-        pw.println();
+        pw.printf("Method: %s", request.getMethod()).println();
 
-        pw.printf("Scheme: %s", request.getScheme());
-        pw.println();
+        pw.printf("Scheme: %s", request.getScheme()).println();
 
-        pw.printf("Server Name: %s", request.getServerName());
-        pw.println();
+        pw.printf("Server Name: %s", request.getServerName()).println();
 
-        pw.printf("Server Port: %s", request.getServerPort());
-        pw.println();
+        pw.printf("Server Port: %s", request.getServerPort()).println();
 
-        pw.printf("Context Path: %s", request.getContextPath());
-        pw.println();
+        pw.printf("Context Path: %s", request.getContextPath()).println();
 
-        pw.printf("Path Info: %s", request.getPathInfo());
-        pw.println();
+        pw.printf("Path Info: %s", request.getPathInfo()).println();
 
-        pw.printf("Path Translated: %s", request.getPathTranslated());
-        pw.println();
+        pw.printf("Path Translated: %s", request.getPathTranslated()).println();
 
-        pw.printf("Query String: %s", request.getQueryString());
-        pw.println();
+        pw.printf("Query String: %s", request.getQueryString()).println();
 
-        pw.printf("Auth Type: %s", request.getAuthType());
-        pw.println();
+        pw.printf("Auth Type: %s", request.getAuthType()).println();
 
-        pw.printf("Character Encoding: %s", request.getCharacterEncoding());
-        pw.println();
+        pw.printf("Character Encoding: %s", request.getCharacterEncoding()).println();
 
-        pw.printf("Content Length: %s", request.getContentLength());
-        pw.println();
+        pw.printf("Content Length: %s", request.getContentLength()).println();
 
-        pw.printf("Servlet Path: %s", request.getServletPath());
-        pw.println();
+        pw.printf("Servlet Path: %s", request.getServletPath()).println();
 
-        pw.printf("Content Type: %s", request.getContentType());
-        pw.println();
+        pw.printf("Content Type: %s", request.getContentType()).println();
 
         if (request.getLocale() != null) {
-            pw.printf("Locale: %s", request.getLocale().getDisplayName());
-            pw.println();
+            pw.printf("Locale: %s", request.getLocale().getDisplayName()).println();
         }
 
-        pw.printf("Local Address: %s", request.getLocalAddr());
-        pw.println();
+        pw.printf("Local Address: %s", request.getLocalAddr()).println();
 
-        pw.printf("Local Port: %s", request.getLocalPort());
-        pw.println();
+        pw.printf("Local Port: %s", request.getLocalPort()).println();
 
-        pw.printf("Remote Address: %s", request.getRemoteAddr());
-        pw.println();
+        pw.printf("Remote Address: %s", request.getRemoteAddr()).println();
 
-        pw.printf("Remote Host: %s", request.getRemoteHost());
-        pw.println();
+        pw.printf("Remote Host: %s", request.getRemoteHost()).println();
 
-        pw.printf("Remote Port: %s", request.getRemotePort());
-        pw.println();
+        pw.printf("Remote Port: %s", request.getRemotePort()).println();
 
-        pw.printf("Remote User: %s", request.getRemoteUser());
-        pw.println();
+        pw.printf("Remote User: %s", request.getRemoteUser()).println();
     }
 
     private void printParameters(HttpServletRequest request, PrintWriter pw) {
-        if (request.getParameterNames().hasMoreElements()) {
+        // If super.getInputStream() is called before super.getParameterMap() is called,
+        // then super.getParameterMap() is empty (there is no open IS left to populate it)
 
+        if (request.getParameterMap().size() > 0) {
             pw.println(LINE);
             pw.println("> REQUEST PARAMETERS");
             pw.println();
 
-            for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
-                final String param = params.nextElement();
-
-                if (ArrayUtils.contains(blacklistParameters, param)) {
-                    pw.printf("%s: %s", param, "**********");
+            for (final String key : (Set<String>) request.getParameterMap().keySet()) {
+                if (ArrayUtils.contains(blacklistParameters, key)) {
+                    pw.printf("%s: %s", key, "**********");
                 } else {
-                    pw.printf("%s: %s", param, request.getParameter(param));
+                    pw.printf("%s: %s", key, Arrays.toString(request.getParameterValues(key)));
                 }
 
                 pw.println();
@@ -246,6 +246,20 @@ public class HttpRequestLogger implements Filter {
             }
         }
     }
+
+
+    private void printRaw(HttpServletRequest request, PrintWriter pw) {
+        pw.println(LINE);
+        pw.println("> RAW REQUEST");
+        pw.println();
+
+        try {
+            pw.println(IOUtils.toString(request.getInputStream()));
+        } catch (IOException e) {
+            pw.printf("Error reading the request's InputStream: %s", e.getMessage());
+        }
+    }
+
 
     @Override
     public void destroy() {
@@ -298,6 +312,9 @@ public class HttpRequestLogger implements Filter {
         // Enabled
         enabled = PropertiesUtil.toBoolean(config.get(PROP_ENABLED), DEFAULT_ENABLED);
 
+        // Enabled
+        showRaw = PropertiesUtil.toBoolean(config.get(PROP_SHOW_RAW), DEFAULT_SHOW_RAW);
+
         // Accept Paths
         acceptPaths = PropertiesUtil.toStringArray(config.get(PROP_ACCEPT_PATHS), DEFAULT_ACCEPT_PATHS);
 
@@ -331,7 +348,9 @@ public class HttpRequestLogger implements Filter {
 
         pw.println();
         pw.printf("Enabled: %s", enabled).println();
+        pw.printf("Show Raw: %s", showRaw).println();
         pw.printf("Path Prefixes: %s", Arrays.toString(acceptPaths)).println();
+
         for (final Map.Entry<String, Pattern> entry : acceptHeaders.entrySet()) {
             pw.printf("Accept Header ~> %s: %s", entry.getKey(), entry.getValue().pattern());
         }
