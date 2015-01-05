@@ -20,9 +20,7 @@
 
 package com.adobe.acs.commons.logging.impl;
 
-import com.adobe.acs.commons.requestwrappers.MultiReadHttpServletRequest;
 import com.adobe.acs.commons.util.OsgiPropertyUtil;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
@@ -30,8 +28,8 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -61,8 +59,8 @@ import java.util.regex.Pattern;
         label = "ACS AEM Commons - HTTP Request Logger",
         description = "Logs data about incoming HTTP Requests to AEM",
         metatype = true,
-        policy = ConfigurationPolicy.REQUIRE
-)
+        immediate = true,
+        policy = ConfigurationPolicy.REQUIRE)
 public class HttpRequestLogger implements Filter {
     private static final Logger log = LoggerFactory.getLogger(HttpRequestLogger.class);
 
@@ -74,22 +72,24 @@ public class HttpRequestLogger implements Filter {
             boolValue = DEFAULT_ENABLED)
     public static final String PROP_ENABLED = "enabled";
 
-    private static final boolean DEFAULT_SHOW_RAW = false;
-    private boolean showRaw = DEFAULT_SHOW_RAW;
-    @Property(label = "Show Raw",
-            boolValue = DEFAULT_SHOW_RAW)
-    public static final String PROP_SHOW_RAW = "show-raw";
-
     private static final String[] DEFAULT_ACCEPT_HEADERS = new String[]{};
     private Map<String, Pattern> acceptHeaders = new HashMap<String, Pattern>();
     @Property(label = "Accept Header patterns",
+            cardinality = Integer.MAX_VALUE,
             value = {})
     public static final String PROP_ACCEPT_HEADERS = "accept.headers";
 
+    private static final String[] DEFAULT_ACCEPT_METHODS = new String[]{};
+    private String[] acceptMethods = DEFAULT_ACCEPT_PATHS;
+    @Property(label = "Accept HTTP Methods",
+            cardinality = 10,
+            value = {})
+    public static final String PROP_ACCEPT_METHODS = "accept.http-methods";
 
     private static final String[] DEFAULT_ACCEPT_PATHS = new String[]{"/"};
     private String[] acceptPaths = DEFAULT_ACCEPT_PATHS;
-    @Property(label = "Accept Header patterns",
+    @Property(label = "Accept Path Prefixes",
+            cardinality = Integer.MAX_VALUE,
             value = {"/"})
     public static final String PROP_ACCEPT_PATHS = "accept.paths";
 
@@ -117,43 +117,32 @@ public class HttpRequestLogger implements Filter {
                          final ServletResponse servletResponse,
                          final FilterChain filterChain) throws IOException, ServletException {
 
-        if (servletRequest instanceof HttpServletRequest) {
+        if (!(servletRequest instanceof SlingHttpServletRequest)) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
 
-            final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+        final SlingHttpServletRequest request = (SlingHttpServletRequest) servletRequest;
 
-            if (accepts(httpServletRequest)) {
+        if (accepts(request)) {
 
-                // Use the Multi-Read Http Servlet Request wrapper as this Filter (can) read
-                // POST parameters which will make them inaccessible further down the filter chain
-                final MultiReadHttpServletRequest request =
-                        new MultiReadHttpServletRequest((HttpServletRequest) servletRequest);
+            final StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
 
-                final StringWriter sw = new StringWriter();
-                final PrintWriter pw = new PrintWriter(sw);
+            pw.println();
 
-                pw.println();
+            pw.println(LINE);
 
-                pw.println(LINE);
+            pw.printf("[ %s ] %s", request.getMethod().toUpperCase(), request.getRequestURI()).println();
+            pw.println(request.getRequestURL().toString());
 
-                pw.printf("[ %s ] %s", request.getMethod().toUpperCase(), request.getRequestURI()).println();
-                pw.println(request.getRequestURL().toString());
+            printHeaders(request, pw);
+            printParameters(request, pw);
+            printMiscRequestInfo(request, pw);
 
-                printHeaders(request, pw);
-                printParameters(request, pw);
-                printMiscRequestInfo(request, pw);
+            pw.println(LINE);
 
-                if (this.showRaw) {
-                    printRaw(request, pw);
-                }
-
-                pw.println(LINE);
-
-                log.trace(sw.toString());
-
-                // Call the filter chain w the Multi-Readable Http Servlet Request
-                filterChain.doFilter(request, servletResponse);
-                return;
-            }
+            log.trace(sw.toString());
         }
 
         filterChain.doFilter(servletRequest, servletResponse);
@@ -208,9 +197,6 @@ public class HttpRequestLogger implements Filter {
     }
 
     private void printParameters(HttpServletRequest request, PrintWriter pw) {
-        // If super.getInputStream() is called before super.getParameterMap() is called,
-        // then super.getParameterMap() is empty (there is no open IS left to populate it)
-
         if (request.getParameterMap().size() > 0) {
             pw.println(LINE);
             pw.println("> REQUEST PARAMETERS");
@@ -247,20 +233,6 @@ public class HttpRequestLogger implements Filter {
         }
     }
 
-
-    private void printRaw(HttpServletRequest request, PrintWriter pw) {
-        pw.println(LINE);
-        pw.println("> RAW REQUEST");
-        pw.println();
-
-        try {
-            pw.println(IOUtils.toString(request.getInputStream()));
-        } catch (IOException e) {
-            pw.printf("Error reading the request's InputStream: %s", e.getMessage());
-        }
-    }
-
-
     @Override
     public void destroy() {
 
@@ -271,7 +243,24 @@ public class HttpRequestLogger implements Filter {
 
         // Enabled state
         if (!this.enabled) {
+            log.debug("Disabled");
             return false;
+        }
+
+        // HTTP Methods
+        if (ArrayUtils.isNotEmpty(acceptMethods)) {
+
+            boolean acceptableMethod = false;
+            for (final String method : acceptMethods)  {
+                if (StringUtils.equalsIgnoreCase(method, request.getMethod())) {
+                    acceptableMethod = true;
+                    break;
+                }
+            }
+
+            if (!acceptableMethod) {
+                return false;
+            }
         }
 
         // Paths
@@ -287,6 +276,8 @@ public class HttpRequestLogger implements Filter {
             for (Map.Entry<String, Pattern> entry : acceptHeaders.entrySet()) {
                 final String headerValue = request.getHeader(entry.getKey());
 
+                log.debug("{} ~> {}", entry.getKey(), headerValue);
+
                 if (StringUtils.isNotBlank(headerValue)) {
                     final Matcher matcher = entry.getValue().matcher(headerValue);
                     if (matcher.matches()) {
@@ -297,10 +288,12 @@ public class HttpRequestLogger implements Filter {
             }
 
             if (!foundMatchingHeader) {
+                log.debug("rejected by no matching header");
                 return false;
             }
         }
 
+        // nothing was able to reject
         return true;
 
     }
@@ -312,8 +305,8 @@ public class HttpRequestLogger implements Filter {
         // Enabled
         enabled = PropertiesUtil.toBoolean(config.get(PROP_ENABLED), DEFAULT_ENABLED);
 
-        // Enabled
-        showRaw = PropertiesUtil.toBoolean(config.get(PROP_SHOW_RAW), DEFAULT_SHOW_RAW);
+        // Accept Methods
+        acceptMethods = PropertiesUtil.toStringArray(config.get(PROP_ACCEPT_METHODS), DEFAULT_ACCEPT_METHODS);
 
         // Accept Paths
         acceptPaths = PropertiesUtil.toStringArray(config.get(PROP_ACCEPT_PATHS), DEFAULT_ACCEPT_PATHS);
@@ -338,8 +331,8 @@ public class HttpRequestLogger implements Filter {
 
         if (enabled) {
             Dictionary<String, String> filterProps = new Hashtable<String, String>();
-            filterProps.put(Constants.SERVICE_RANKING, String.valueOf(Integer.MIN_VALUE));
-            filterProps.put("pattern", ".*");
+            filterProps.put("sling.filter.scope", "request");
+            filterProps.put("sling.filter.order", "-75000");
             filterRegistration = ctx.getBundleContext().registerService(Filter.class.getName(), this, filterProps);
         }
 
@@ -348,11 +341,11 @@ public class HttpRequestLogger implements Filter {
 
         pw.println();
         pw.printf("Enabled: %s", enabled).println();
-        pw.printf("Show Raw: %s", showRaw).println();
         pw.printf("Path Prefixes: %s", Arrays.toString(acceptPaths)).println();
+        pw.printf("Accept HTTP Methods: %s", Arrays.toString(acceptMethods)).println();
 
         for (final Map.Entry<String, Pattern> entry : acceptHeaders.entrySet()) {
-            pw.printf("Accept Header ~> %s: %s", entry.getKey(), entry.getValue().pattern());
+            pw.printf("Accept Header ~> %s: %s", entry.getKey(), entry.getValue().pattern()).println();
         }
 
         pw.printf("Blacklist Headers: %s", Arrays.toString(blacklistHeaders)).println();
@@ -373,5 +366,6 @@ public class HttpRequestLogger implements Filter {
         acceptPaths = DEFAULT_ACCEPT_PATHS;
         blacklistParameters = DEFAULT_BLACKLIST_PARAMETERS;
         blacklistHeaders = DEFAULT_BLACKLIST_HEADERS;
+        acceptMethods = DEFAULT_ACCEPT_METHODS;
     }
 }
