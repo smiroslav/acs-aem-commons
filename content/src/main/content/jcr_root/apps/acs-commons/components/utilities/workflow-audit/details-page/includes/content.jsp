@@ -21,16 +21,17 @@
           import="org.apache.sling.api.resource.Resource,
                  org.apache.sling.api.resource.ValueMap,
                  java.util.ArrayList,
-                 java.util.List" %><%
+                 java.util.Iterator, java.util.List" %><%
 
     String suffix = slingRequest.getRequestPathInfo().getSuffix();
     Resource wfResource = resourceResolver.getResource(suffix);
     ValueMap wfProperties = wfResource.adaptTo(ValueMap.class);
 
     List<ValueMap> wiProperties = new ArrayList<ValueMap>();
+    Iterator<Resource> children = wfResource.listChildren();
 
-    while(wfResource.listChildren().hasNext()) {
-        Resource tmp = wfResource.listChildren().next();
+    while (children.hasNext()) {
+        Resource tmp = children.next();
         wiProperties.add(tmp.adaptTo(ValueMap.class));
     }
 

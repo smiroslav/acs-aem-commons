@@ -3,8 +3,6 @@
 
     log.error("SLING FORWARD");
 
-%><!---<sling:forward path="${resource.path}"
+%><<sling:forward path="${resource.path}"
                replaceSelectors=""
                resourceType="acs-commons/components/utilities/workflow-audit/details-page" />
-
--->                hello
