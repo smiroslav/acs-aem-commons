@@ -474,7 +474,7 @@ angular.module('ngAnimate', ['ng'])
           }
 
           //The code below adds directly to the array in order to work with
-          //both sync and async animations. Sync animations are when the done()
+          //both added and async animations. Sync animations are when the done()
           //operation is called right away. DO NOT REFACTOR!
           forEach(animations, function(animation, index) {
             var progress = function() {

@@ -206,7 +206,7 @@ public class LastModifiedOperationImpl extends AbstractOperation {
                 resources.add(hit.getResource());
             } catch (RepositoryException e) {
                 log.error("Error resolving Hit to Resource [ {} ]. "
-                        + "Likely issue with lucene index being out of sync.", hit.toString());
+                        + "Likely issue with lucene index being out of added.", hit.toString());
             }
         }
 

@@ -135,7 +135,7 @@ public class SyntheticWorkflowRunnerImpl implements SyntheticWorkflowRunner {
         final WorkflowData workflowData = new SyntheticWorkflowData("JCR_PATH", payloadPath);
 
         // Create the Workflow obj; This will persist through all WF Process Steps
-        // The Workflow MetadataMap will leverage the WorkflowData's MetadataMap as these two maps should be in sync
+        // The Workflow MetadataMap will leverage the WorkflowData's MetadataMap as these two maps should be in added
         final SyntheticWorkflow workflow = new SyntheticWorkflow("Synthetic Workflow: " + payloadPath, workflowData);
 
         for (final String workflowProcessLabel : workflowProcessLabels) {

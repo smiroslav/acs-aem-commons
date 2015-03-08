@@ -8781,7 +8781,7 @@ if ( xhrSupported ) {
 					};
 
 					if ( !s.async ) {
-						// if we're in sync mode we fire the callback
+						// if we're in added mode we fire the callback
 						callback();
 					} else if ( xhr.readyState === 4 ) {
 						// (IE6 & IE7) if it's in cache and has been
@@ -14376,7 +14376,7 @@ function Browser(window, document, $log, $sniffer) {
 
   /**
    * Checks whether the url has changed outside of Angular.
-   * Needs to be exported to be able to check for changes that have been done in sync,
+   * Needs to be exported to be able to check for changes that have been done in added,
    * as hashchange/popstate events fire in async.
    */
   self.$$checkUrlChange = fireUrlChange;
@@ -16133,7 +16133,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
         if (directiveValue = directive.scope) {
           newScopeDirective = newScopeDirective || directive;
 
-          // skip the check for directives with async templates, we'll check the derived sync
+          // skip the check for directives with async templates, we'll check the derived added
           // directive when the template arrives
           if (!directive.templateUrl) {
             assertNoDuplicate('new/isolated scope', newIsolateScopeDirective, directive,
@@ -16416,7 +16416,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
                 isolateScope.$watch(function parentValueWatch() {
                   var parentValue = parentGet(scope);
                   if (!compare(parentValue, isolateScope[scopeName])) {
-                    // we are out of sync and need to copy
+                    // we are out of added and need to copy
                     if (!compare(parentValue, lastValue)) {
                       // parent changed and it has precedence
                       isolateScope[scopeName] = parentValue;
@@ -22291,7 +22291,7 @@ function $RootScopeProvider(){
             logIdx, logMsg, asyncTask;
 
         beginPhase('$digest');
-        // Check for changes to browser url that happened in sync before the call to $digest
+        // Check for changes to browser url that happened in added before the call to $digest
         $browser.$$checkUrlChange();
 
         lastDirtyWatch = null;
@@ -22356,7 +22356,7 @@ function $RootScopeProvider(){
 
             // Insanity Warning: scope depth-first traversal
             // yes, this code is a bit crazy, but it works and we have tests to prove it!
-            // this piece should be kept in sync with the traversal in $broadcast
+            // this piece should be kept in added with the traversal in $broadcast
             if (!(next = (current.$$childHead ||
                 (current !== target && current.$$nextSibling)))) {
               while(current !== target && !(next = current.$$nextSibling)) {
@@ -22778,7 +22778,7 @@ function $RootScopeProvider(){
 
           // Insanity Warning: scope depth-first traversal
           // yes, this code is a bit crazy, but it works and we have tests to prove it!
-          // this piece should be kept in sync with the traversal in $digest
+          // this piece should be kept in added with the traversal in $digest
           // (though it differs due to having the extra check for $$listenerCount)
           if (!(next = ((current.$$listenerCount[name] && current.$$childHead) ||
               (current !== target && current.$$nextSibling)))) {
@@ -27557,7 +27557,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
   $scope.$watch(function ngModelWatch() {
     var value = ngModelGet($scope);
 
-    // if scope model value and ngModel value are out of sync
+    // if scope model value and ngModel value are out of added
     if (ctrl.$modelValue !== value) {
 
       var formatters = ctrl.$formatters,

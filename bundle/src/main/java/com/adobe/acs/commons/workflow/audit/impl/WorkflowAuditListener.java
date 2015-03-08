@@ -1,11 +1,8 @@
 package com.adobe.acs.commons.workflow.audit.impl;
 
 
-import com.adobe.acs.commons.workflow.audit.WorkflowAuditItemRecorder;
-import com.day.cq.workflow.WorkflowException;
-import com.day.cq.workflow.WorkflowService;
-import com.day.cq.workflow.WorkflowSession;
-import com.day.cq.workflow.exec.Workflow;
+import com.adobe.acs.commons.workflow.audit.WorkflowResourceSync;
+import com.day.cq.commons.jcr.JcrUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -15,17 +12,13 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.jobs.JobProcessor;
 import org.apache.sling.event.jobs.JobUtil;
@@ -38,7 +31,11 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component(
@@ -50,23 +47,20 @@ import java.util.concurrent.ConcurrentHashMap;
         @Property(
                 label = "Event Topics",
                 value = { SlingConstants.TOPIC_RESOURCE_ADDED, SlingConstants.TOPIC_RESOURCE_CHANGED },
-                description = "[Required] Event Topics this event handler will to respond to.",
                 name = EventConstants.EVENT_TOPIC,
                 propertyPrivate = true
         ),
         @Property(
                 label = "Event Filters",
-                value =   "(|(" + SlingConstants.PROPERTY_RESOURCE_TYPE+ "=cq/workflow/components/instance)("
-                        + SlingConstants.PROPERTY_RESOURCE_TYPE + "=cq/workflow/components/workitem))",
-                description = "[Optional] Event Filters used to further restrict this event handler; Uses LDAP expression against event properties.",
+                value = "(" + SlingConstants.PROPERTY_PATH + "=/etc/workflow/instances/*)",
                 name = EventConstants.EVENT_FILTER,
                 propertyPrivate = true
         )
 })
 @References({
         @Reference(
-                name = "workflowAuditRecorder",
-                referenceInterface = WorkflowAuditItemRecorder.class,
+                name = "workflowResourceSyncers",
+                referenceInterface = WorkflowResourceSync.class,
                 policy = ReferencePolicy.DYNAMIC,
                 cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
 })
@@ -74,13 +68,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WorkflowAuditListener implements JobProcessor, EventHandler {
     private Logger log = LoggerFactory.getLogger(WorkflowAuditListener.class);
 
-    private Map<String, WorkflowAuditItemRecorder> workflowAuditItemRecorders = new ConcurrentHashMap<String,
-                WorkflowAuditItemRecorder>();
-
-    private static final String ROOT_PATH = "/etc/workflow/audit";
-
-    @Reference
-    private WorkflowService workflowService;
+    private Map<String, WorkflowResourceSync> workflowResourceSyncs =
+            new ConcurrentHashMap<String, WorkflowResourceSync>();
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -102,24 +91,22 @@ public class WorkflowAuditListener implements JobProcessor, EventHandler {
 
         try {
             resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-
-            final String modelId = Text.getName(Text.getAbsoluteParent(path, 3)) + "/"
-                    + Text.getName(Text.getAbsoluteParent(path, 4));
-
-            final Resource workflowAuditResource = this.getOrCreateAuditFolder(resourceResolver, modelId);
             final Resource eventResource = resourceResolver.getResource(path);
 
-            if (eventResource.isResourceType("cq/workflow/components/instance"))  {
-                if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic()))  {
-                    this.recordWorkflowInstanceAdd(workflowAuditResource, eventResource);
-                } else if (SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()))  {
-                    this.recordWorkflowInstanceModify(workflowAuditResource, eventResource);
-                }
-            } else if (eventResource.isResourceType("cq/workflow/components/workitem"))  {
-                if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic()))  {
-                    this.recordWorkItemAdd(workflowAuditResource, eventResource);
-                } else if (SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()))  {
-                    this.recordWorkItemModify(workflowAuditResource, eventResource);
+            Resource auditResource = null;
+
+            for (final WorkflowResourceSync workflowResourceSync : this.workflowResourceSyncs.values()) {
+                if (workflowResourceSync.accepts(eventResource)) {
+
+                    if (auditResource == null) {
+                        auditResource = this.getOrCreateAuditFolder(resourceResolver, eventResource);
+                    }
+
+                    if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic())) {
+                        workflowResourceSync.added(auditResource, eventResource);
+                    } else if (SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic())) {
+                        workflowResourceSync.changed(auditResource, eventResource);
+                    }
                 }
             }
 
@@ -143,76 +130,6 @@ public class WorkflowAuditListener implements JobProcessor, EventHandler {
         return true;
     }
 
-    private void recordWorkflowInstanceAdd(final Resource workflowAuditResource, final Resource eventResource) throws PersistenceException {
-        final ValueMap src = eventResource.adaptTo(ValueMap.class);
-        final ModifiableValueMap dest = workflowAuditResource.adaptTo(ModifiableValueMap.class);
-
-        for (final Map.Entry<String, Object> entry : src.entrySet()) {
-            if (!StringUtils.startsWithAny(entry.getKey(), new String[] {"jcr:", "sling:"})) {
-                dest.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        dest.put(SlingConstants.PROPERTY_RESOURCE_TYPE, Constants.RT_WORKFLOW_INSTANCE_AUDIT);
-
-        final String workflowId = Text.getAbsoluteParent(eventResource.getPath(), 4);
-
-            final WorkflowSession workflowSession =
-                    workflowService.getWorkflowSession(eventResource.getResourceResolver().adaptTo(Session.class));
-
-            Workflow workflow = null;
-            try {
-                workflow = workflowSession.getWorkflow(workflowId);
-
-                dest.put("payload", workflow.getWorkflowData().getPayload());
-                dest.put("modelTitle", workflow.getWorkflowModel().getTitle());
-            } catch (WorkflowException e) {
-                log.warn("Could not find Workflow to collect the Model title");
-            }
-
-        this.save(eventResource.getResourceResolver());
-    }
-
-    private void recordWorkflowInstanceModify(final Resource workflowAuditResource, final Resource eventResource) throws PersistenceException {
-        final ModifiableValueMap dest = workflowAuditResource.adaptTo(ModifiableValueMap.class);
-
-        this.copyProperties(eventResource, workflowAuditResource);
-        dest.put(SlingConstants.PROPERTY_RESOURCE_TYPE, Constants.RT_WORKFLOW_INSTANCE_AUDIT);
-
-        this.save(eventResource.getResourceResolver());
-    }
-
-    private void recordWorkItemAdd(final Resource workflowAuditResource, final Resource eventResource) throws RepositoryException {
-        final Node src = eventResource.adaptTo(Node.class);
-        final Node dest = workflowAuditResource.adaptTo(Node.class);
-
-        final Node workItem = JcrUtils.getOrAddNode(dest, src.getName(), JcrConstants.NT_UNSTRUCTURED);
-        this.copyProperties(eventResource, eventResource.getResourceResolver().getResource(workItem.getPath()));
-
-        workItem.setProperty(SlingConstants.PROPERTY_RESOURCE_TYPE, Constants.RT_WORKFLOW_ITEM_AUDIT);
-    }
-
-    private void recordWorkItemModify(final Resource workflowAuditResource, final Resource eventResource) throws RepositoryException {
-        final Node src = eventResource.adaptTo(Node.class);
-        final Node dest = workflowAuditResource.adaptTo(Node.class);
-
-        final Node workItem = JcrUtils.getOrAddNode(dest, src.getName(), JcrConstants.NT_UNSTRUCTURED);
-        this.copyProperties(eventResource, eventResource.getResourceResolver().getResource(workItem.getPath()));
-
-        workItem.setProperty(SlingConstants.PROPERTY_RESOURCE_TYPE, Constants.RT_WORKFLOW_ITEM_AUDIT);
-    }
-
-    private void copyProperties(final Resource srcResource, final Resource destResource) {
-        final ValueMap src = srcResource.adaptTo(ValueMap.class);
-        final ModifiableValueMap dest = destResource.adaptTo(ModifiableValueMap.class);
-
-        for (final Map.Entry<String, Object> entry : src.entrySet()) {
-            if (!StringUtils.startsWithAny(entry.getKey(), new String[]{ "jcr:", "sling:" })) {
-                dest.put(entry.getKey(), entry.getValue());
-            }
-        }
-    }
-
     private void save(final ResourceResolver resourceResolver) throws PersistenceException {
         if (resourceResolver.hasChanges()) {
             final long start = System.currentTimeMillis();
@@ -221,42 +138,64 @@ public class WorkflowAuditListener implements JobProcessor, EventHandler {
         }
     }
 
-    private Resource getOrCreateAuditFolder(final ResourceResolver resourceResolver, final String workflowId) throws
-            RepositoryException {
-        final String nodeName = StringUtils.replace(workflowId, "-", "/");
-        final String path = ROOT_PATH + "/" + nodeName;
+    private Resource getOrCreateAuditFolder(final ResourceResolver resourceResolver,
+                                            final Resource workflowResource) throws RepositoryException {
 
-        final Node node = JcrUtils.getOrCreateByPath(path, "sling:Folder", "sling:Folder",
+        final String path = WorkflowAuditUtil.getAuditPath(workflowResource);
+        final Node node = JcrUtils.getOrCreateByPath(path, "sling:OrderedFolder", "sling:OrderedFolder",
                 resourceResolver.adaptTo(Session.class), true);
 
         return resourceResolver.getResource(node.getPath());
     }
 
+    /*
     private Resource createAuditItem(final ResourceResolver resourceResolver,
                                      final Resource parent) throws RepositoryException, PersistenceException {
-        final Node node = JcrUtils.getOrCreateUniqueByPath(parent.getPath() + "/item" ,
+        final Node node = JcrUtils.getOrCreateUniqueByPath(parent.getPath() + "/item",
                 "nt:unstructured", resourceResolver.adaptTo(Session.class));
 
         return resourceResolver.getResource(node.getPath());
     }
+    */
 
-    protected final void bindWorkflowAuditRecorder(final WorkflowAuditItemRecorder service,
-                                           final Map<Object, Object> props) {
-        final String type = PropertiesUtil.toString(props.get(WorkflowAuditItemRecorder.PROP_TYPE), null);
+    public void order(final Resource resource) throws RepositoryException {
+        final Set<String> names = new TreeSet<String>(Collections.reverseOrder());
+        final Iterator<Resource> children = resource.getChildren().iterator();
 
-        if (type != null) {
-            log.debug("Adding recorder: {}", type);
-            this.workflowAuditItemRecorders.put(type, service);
+        while (children.hasNext()) {
+            names.add(children.next().getName());
+        }
+
+        JcrUtil.setChildNodeOrder(resource.adaptTo(Node.class),
+                names.toArray(new String[names.size()]));
+
+        if (Constants.ROOT_PATH.equals(resource.getPath())) {
+            return;
+        } else {
+            this.order(resource.getParent());
         }
     }
 
-    protected final void unbindWorkflowAuditRecorder(final WorkflowAuditItemRecorder service,
-                                             final Map<Object, Object> props) {
-        final String type = PropertiesUtil.toString(props.get(WorkflowAuditItemRecorder.PROP_TYPE), null);
+
+    /* Workflow Resource Syncs */
+
+    protected final void bindWorkflowResourceSync(final WorkflowResourceSync service,
+                                                  final Map<Object, Object> props) {
+        final String type = PropertiesUtil.toString(props.get(WorkflowResourceSync.PROP_TYPE), null);
 
         if (type != null) {
-            log.debug("Removing recorder: {}", type);
-            this.workflowAuditItemRecorders.remove(type);
+            log.debug("Adding workflow resource added: {}", type);
+            this.workflowResourceSyncs.put(type, service);
+        }
+    }
+
+    protected final void unbindWorkflowResourceSync(final WorkflowResourceSync service,
+                                                    final Map<Object, Object> props) {
+        final String type = PropertiesUtil.toString(props.get(WorkflowResourceSync.PROP_TYPE), null);
+
+        if (type != null) {
+            log.debug("Removing workflow resource added: {}", type);
+            this.workflowResourceSyncs.remove(type);
         }
     }
 }
