@@ -60,6 +60,17 @@ public class WorkflowAuditDataServlet extends SlingSafeMethodsServlet {
             return this.table;
         }
 
+
+        @Override
+        public final void accept(final Resource resource) {
+            final ValueMap properties = resource.adaptTo(ValueMap.class);
+
+            if (!properties.get(Constants.PN_IS_CONTAINER, false)) {
+                super.accept(resource);
+            }
+        }
+
+
         @Override
         protected void visit(final Resource resource) {
             final ValueMap properties = resource.adaptTo(ValueMap.class);

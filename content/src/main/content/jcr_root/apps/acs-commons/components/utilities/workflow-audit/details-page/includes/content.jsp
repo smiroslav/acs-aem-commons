@@ -20,51 +20,55 @@
 %><%@page session="false"
           import="org.apache.sling.api.resource.Resource,
                  org.apache.sling.api.resource.ValueMap,
-                 java.util.ArrayList,
-                 java.util.Iterator, java.util.List" %><%
+                 com.adobe.acs.commons.workflow.audit.WorkflowAuditReportHelper"
+%><%
+
+    WorkflowAuditReportHelper reportHelper = sling.getService(WorkflowAuditReportHelper.class);
 
     String suffix = slingRequest.getRequestPathInfo().getSuffix();
     Resource wfResource = resourceResolver.getResource(suffix);
     ValueMap wfProperties = wfResource.adaptTo(ValueMap.class);
 
-    List<ValueMap> wiProperties = new ArrayList<ValueMap>();
-    Iterator<Resource> children = wfResource.listChildren();
-
-    while (children.hasNext()) {
-        Resource tmp = children.next();
-        wiProperties.add(tmp.adaptTo(ValueMap.class));
-    }
-
     pageContext.setAttribute("workflow", wfProperties);
-    pageContext.setAttribute("workItems", wiProperties);
+    pageContext.setAttribute("workItems", reportHelper.getWorkItems(wfResource));
 
 %>
 
 <h3>Workflow Details</h3>
 
 <ul>
-    <li>Workflow: ${workflow.modelTitle}</li>
+    <li>Workflow: ${workflow.modelTitle} (v${workflow.modelVersion})</li>
     <li>Initiator: ${workflow.initiator}</li>
-    <li>Workflow: ${workflow.modelVersion}</li>
     <li>Payload: ${workflow.payload}</li>
     <li>Status: ${workflow.status}</li>
     <li>Start Time: <fmt:formatDate value="${workflow.startTime.time}" pattern="yy-MMM-dd"/></li>
-    <li>End Time: <fmt:formatDate value="${workflow.endTime.time}" pattern="yy-MMM-dd"/></li>
+
+    <c:if test="${not empty workflow.endTime}">
+        <li>End Time: <fmt:formatDate value="${workflow.endTime.time}" pattern="yy-MMM-dd"/></li>
+    </c:if>
 </ul>
 
 <hr/>
 
 <h4>Workflow Step History</h4>
 
-<c:forEach var="workItems" items="workItems">
+<c:forEach var="workItem" items="${workItems}">
 
-    <h5>${workItem.nodeId}</h5>
+    <h5>${workItem.workflowStepTitle}</h5>
+    <p>${workItem.workflowStepDescription}</p>
 
     <ul>
         <li>Assignee: ${workItem.assignee}</li>
         <li>Status: ${workItem.status}</li>
         <li>Start Time: <fmt:formatDate value="${workItem.startTime.time}" pattern="yy-MMM-dd"/></li>
-        <li>End Time: <fmt:formatDate value="${workItem.endTime.time}" pattern="yy-MMM-dd"/></li>
+
+        <c:if test="${not empty workItem.endTime}">
+            <li>End Time: <fmt:formatDate value="${workItem.endTime.time}" pattern="yy-MMM-dd"/></li>
+        </c:if>
+
+        <c:if test="${not empty workItem.metadata.comment}">
+            <li>Comment: ${workItem.metdata.comment}</li>
+        </c:if>
     </ul>
 
 </c:forEach>

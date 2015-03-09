@@ -1,16 +1,11 @@
 package com.adobe.acs.commons.workflow.audit.impl;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.util.Map;
 
 public class WorkflowAuditUtil {
@@ -39,7 +34,11 @@ public class WorkflowAuditUtil {
     }
 
     public static String getAuditPath(final Resource eventResource) {
-        final String workflowId = getWorkflowModelId(eventResource.getPath());
+        return getAuditPath(eventResource.getPath());
+    }
+
+    public static String getAuditPath(final String eventResourcePath) {
+        final String workflowId = getWorkflowModelId(eventResourcePath);
         final String nodeName = StringUtils.replace(workflowId, "-", "/");
         final String path = Constants.ROOT_PATH + "/" + nodeName;
 
@@ -61,14 +60,4 @@ public class WorkflowAuditUtil {
         return Text.getName(Text.getAbsoluteParent(path, 3)) + "/"
                 + Text.getName(Text.getAbsoluteParent(path, 4));
     }
-
-    public static final Resource getWorkflowStacksResource(final ResourceResolver resourceResolver) throws
-            RepositoryException {
-        final Node node = JcrUtils.getOrCreateByPath("/etc/workflow/audit/workflow-stacks",
-                "sling:Folder",
-                resourceResolver.adaptTo(Session.class));
-
-        return resourceResolver.getResource(node.getPath());
-    }
-
 }

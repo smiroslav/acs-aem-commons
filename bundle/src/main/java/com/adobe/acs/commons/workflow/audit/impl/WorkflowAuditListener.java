@@ -13,6 +13,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -99,7 +100,7 @@ public class WorkflowAuditListener implements JobProcessor, EventHandler {
                 if (workflowResourceSync.accepts(eventResource)) {
 
                     if (auditResource == null) {
-                        auditResource = this.getOrCreateAuditFolder(resourceResolver, eventResource);
+                        auditResource = this.getOrCreateAuditResource(resourceResolver, eventResource);
                     }
 
                     if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic())) {
@@ -138,25 +139,19 @@ public class WorkflowAuditListener implements JobProcessor, EventHandler {
         }
     }
 
-    private Resource getOrCreateAuditFolder(final ResourceResolver resourceResolver,
-                                            final Resource workflowResource) throws RepositoryException {
+    private Resource getOrCreateAuditResource(final ResourceResolver resourceResolver,
+                                              final Resource aemWorkflowResource) throws RepositoryException {
+        final String workflowInstancePath = Text.getAbsoluteParent(aemWorkflowResource.getPath(), 4);
+        final String path = WorkflowAuditUtil.getAuditPath(workflowInstancePath);
 
-        final String path = WorkflowAuditUtil.getAuditPath(workflowResource);
-        final Node node = JcrUtils.getOrCreateByPath(path, "sling:OrderedFolder", "sling:OrderedFolder",
+        final Node node = JcrUtils.getOrCreateByPath(path,
+                "sling:OrderedFolder",
+                "sling:OrderedFolder",
                 resourceResolver.adaptTo(Session.class), true);
 
         return resourceResolver.getResource(node.getPath());
     }
 
-    /*
-    private Resource createAuditItem(final ResourceResolver resourceResolver,
-                                     final Resource parent) throws RepositoryException, PersistenceException {
-        final Node node = JcrUtils.getOrCreateUniqueByPath(parent.getPath() + "/item",
-                "nt:unstructured", resourceResolver.adaptTo(Session.class));
-
-        return resourceResolver.getResource(node.getPath());
-    }
-    */
 
     public void order(final Resource resource) throws RepositoryException {
         final Set<String> names = new TreeSet<String>(Collections.reverseOrder());
