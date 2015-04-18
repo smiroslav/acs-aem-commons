@@ -1,4 +1,4 @@
-package com.adobe.acs.commons.tagging.impl;
+package com.adobe.acs.commons.wcm.impl;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -8,6 +8,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
@@ -28,16 +29,18 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Component(
-        label = "ACS AEM Commons - Tag Merge Event Listener",
-        description = "Sample implementation of a Custom Event Listener based on Sling",
+        label = "ACS AEM Commons - Property Merge Event Listener",
+        description = "Merges the values from multiple source properties into a single property as a multi-value.",
         immediate = true,
         metatype = true,
         configurationFactory = true,
@@ -53,12 +56,38 @@ import java.util.Set;
         )
 })
 @Service
-public final class TagMergeEventListenerImpl implements EventHandler, TopologyEventListener {
-    private static final Logger log = LoggerFactory.getLogger(TagMergeEventListenerImpl.class);
+public final class PropertyMergeEventListenerImpl implements EventHandler, TopologyEventListener {
+    private static final Logger log = LoggerFactory.getLogger(PropertyMergeEventListenerImpl.class);
     private static final long TOO_LONG_IN_MS = 500;
+
+    private static final String PROPERTY_TYPE_BOOLEAN = "boolean";
+    private static final String PROPERTY_TYPE_DATE = "date";
+    private static final String PROPERTY_TYPE_DOUBLE = "double";
+    private static final String PROPERTY_TYPE_LONG = "long";
+    private static final String PROPERTY_TYPE_STRING = "string";
 
     private boolean isLeader = false;
 
+    private static final boolean DEFAULT_ALLOW_DUPLICATES = false;
+    private boolean allowDuplicates = DEFAULT_ALLOW_DUPLICATES;
+    @Property(label = "Allow duplicates",
+            description = "True allows duplicate values to be added to the destination. "
+                    + "False forces a unique set of values.",
+            boolValue = DEFAULT_ALLOW_DUPLICATES)
+    public static final String PROP_ALLOW_DUPLICATES = "allow-duplicate-values";
+
+    private static final String DEFAULT_PROPERTY_TYPE = "string";
+    private Class propertyType = String[].class;
+    @Property(label = "Property Type",
+            description = "The property type of the Destinations and Source properties.",
+            options = {
+                    @PropertyOption(name = PROPERTY_TYPE_BOOLEAN, value = "Boolean"),
+                    @PropertyOption(name = PROPERTY_TYPE_DATE, value = "Date"),
+                    @PropertyOption(name = PROPERTY_TYPE_DOUBLE, value = "Double"),
+                    @PropertyOption(name = PROPERTY_TYPE_LONG, value = "Long"),
+                    @PropertyOption(name = PROPERTY_TYPE_STRING, value = "String")
+            })
+    public static final String PROP_PROPERTY_TYPE = "property-type";
 
     private static final String[] DEFAULT_NODE_TYPES = new String[]{};
     private List<String> nodeTypes = new ArrayList<String>();
@@ -67,7 +96,7 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
             cardinality = Integer.MAX_VALUE,
             value = {})
     public static final String PROP_NODE_TYPES = "node-types";
-    
+
     private static final String[] DEFAULT_RESOURCE_TYPES = new String[]{};
     private List<String> resourceTypes = new ArrayList<String>();
     @Property(label = "Resource Types",
@@ -98,7 +127,7 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
     private ResourceResolverFactory resourceResolverFactory;
 
     @Override
-    public final void handleEvent(final Event event) {
+    public void handleEvent(final Event event) {
         if (!this.isLeader) {
             return;
         }
@@ -122,7 +151,7 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
         if (ArrayUtils.isNotEmpty(removed)) {
             delta.addAll(Arrays.asList(removed));
         }
-        
+
         if (CollectionUtils.containsAny(this.sourceProperties, delta)) {
 
             final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
@@ -132,23 +161,25 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
                 resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
 
                 final Resource resource = resourceResolver.getResource(path);
-                if(resource == null) {
-                    log.error("Tag merge event handler attempting to work on a non-existing resource [ {} ]", path);
-                    return; 
+                if (resource == null) {
+                    log.error("Property merge event handler attempting to work on a non-existing resource [ {} ]",
+                            path);
+                    return;
                 }
 
                 // Check Node Types
-                
+
                 boolean acceptNodeType = true;
                 if (CollectionUtils.isNotEmpty(this.nodeTypes)) {
                     final Node node = resource.adaptTo(Node.class);
                     if (node == null) {
-                        log.warn("Tag merge event handler attempting to work on a non-existing node [ {} ]", path);
+                        log.warn("Property merge event handler attempting to work on a non-existing node [ {} ]",
+                                path);
                         return;
                     }
 
                     acceptNodeType = false;
-                    
+
                     for (final String nodeType : this.nodeTypes) {
                         if (node.isNodeType(nodeType)) {
                             acceptNodeType = true;
@@ -156,9 +187,9 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
                         }
                     }
                 }
-                
-                if(!acceptNodeType) {
-                    log.debug("Rejecting tag merge for [ {} ] due to node type mismatch", path);
+
+                if (!acceptNodeType) {
+                    log.debug("Rejecting Property merge for [ {} ] due to node type mismatch", path);
                     return;
                 }
 
@@ -167,7 +198,7 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
                 boolean acceptResourceType = true;
                 if (CollectionUtils.isNotEmpty(this.resourceTypes)) {
                     acceptResourceType = false;
-                    
+
                     for (final String resourceType : this.resourceTypes) {
                         if (resource.isResourceType(resourceType)) {
                             acceptResourceType = true;
@@ -176,28 +207,28 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
                     }
                 }
 
-                if(!acceptResourceType) {
-                    log.debug("Rejecting tag merge for [ {} ] due to resource type mismatch", path);
+                if (!acceptResourceType) {
+                    log.debug("Rejecting Property merge for [ {} ] due to resource type mismatch", path);
                     return;
                 }
 
-                this.merge(resource, this.destinationProperty, this.sourceProperties);
+                this.merge(resource, this.destinationProperty, this.sourceProperties, this.propertyType);
 
             } catch (LoginException e) {
-                log.error("Could not obtain a ResourceResolver for tag merging", e);
+                log.error("Could not obtain a ResourceResolver for Property merging", e);
             } catch (PersistenceException e) {
                 log.error("Could not persist tag merging", e);
             } catch (RepositoryException e) {
-                log.error("Could not check the Node Type of the resource for tag merging", e);
+                log.error("Could not check the Node Type of the resource for Property merging", e);
             } finally {
                 if (resourceResolver != null) {
                     resourceResolver.close();
                 }
 
                 final long duration = System.currentTimeMillis() - start;
-                
+
                 if (duration > TOO_LONG_IN_MS) {
-                    log.warn("Tag merge an alarming long time of {} ms. "
+                    log.warn("Property merge an alarming long time of {} ms. "
                                     + "Long running events may become blacklisted.",
                             duration);
                 }
@@ -207,82 +238,135 @@ public final class TagMergeEventListenerImpl implements EventHandler, TopologyEv
     }
 
     /**
-     * @param resource
-     * @param destination
+     * Merges the values found in the the source properties into the destination property as a multi-value.
+     * The values of the source properties and destination properties must all be the same property type.
+     * <p/>
+     * The unique set of properties will be stored in
+     *
+     * @param resource    the resource to look for the source and destination properties on
+     * @param destination the property to store the collected properties.
      * @param sources
      */
-    public final void merge(final Resource resource, final String destination, final List<String> sources) throws PersistenceException {
+    protected <T> void merge(final Resource resource, final String destination,
+                                   final List<String> sources, Class<T> klass) throws PersistenceException {
+
+        // Create an empty array of type T
+        @SuppressWarnings("unchecked")
+        final T[] emptyArray = (T[]) Array.newInstance(klass, 0);
 
         final ModifiableValueMap properties = resource.adaptTo(ModifiableValueMap.class);
-        final Set<String> collectedTagIds = new LinkedHashSet<String>();
 
-        for (final String source : sources) {
-            collectedTagIds.addAll(Arrays.asList(properties.get(source, new String[]{})));
+        Collection<T> collectedValues = null;
+
+        if (this.allowDuplicates) {
+            collectedValues = new ArrayList<T>();
+        } else {
+            collectedValues = new LinkedHashSet<T>();
         }
 
-        final String[] existingTagIds = properties.get(destination, new String[]{});
+        for (final String source : sources) {
+            // Get the source value as type T
+            final T[] tmp = properties.get(source, emptyArray);
 
-        if (!CollectionUtils.isEqualCollection(Arrays.asList(existingTagIds),
-                collectedTagIds)) {
-            properties.put(destination, collectedTagIds.toArray(new String[collectedTagIds.size()]));
+            // If the value is not null, add to collectedValues
+            if (tmp != null) {
+                collectedValues.addAll(Arrays.asList(tmp));
+            }
+        }
+
+        final T[] currentValues = properties.get(destination, emptyArray);
+
+        if (!CollectionUtils.isEqualCollection(Arrays.asList(currentValues),
+                collectedValues)) {
+            properties.put(destination, collectedValues.toArray(emptyArray));
 
             if (resource.getResourceResolver().hasChanges()) {
                 resource.getResourceResolver().commit();
-                log.info("Tag merge performed at [ " + resource.getPath() + "@{} ] with tags {}", destination, collectedTagIds);
+                log.info("Property merge performed at [ " + resource.getPath() + "@{} ] with values {}",
+                        destination, collectedValues);
             }
         }
     }
 
     @Activate
-    protected final void activate(final Map<String, String> config) {
-        
+    protected void activate(final Map<String, String> config) {
+
+        // Allow Duplicate Values
+
+        this.allowDuplicates = PropertiesUtil.toBoolean(config.get(PROP_ALLOW_DUPLICATES), DEFAULT_ALLOW_DUPLICATES);
+
+        // Property Type
+
+        String propType = PropertiesUtil.toString(config.get(PROP_PROPERTY_TYPE), DEFAULT_PROPERTY_TYPE);
+        if (PROPERTY_TYPE_BOOLEAN.equals(propertyType)) {
+            this.propertyType = Boolean.class;
+        } else if (PROPERTY_TYPE_DATE.equals(propertyType)) {
+            this.propertyType = Date.class;
+        } else if (PROPERTY_TYPE_DOUBLE.equals(propertyType)) {
+            this.propertyType = Double.class;
+        } else if (PROPERTY_TYPE_LONG.equals(propertyType)) {
+            this.propertyType = Long.class;
+        } else {
+            this.propertyType = String.class;
+        }
+
         // Node Types
-        
+
         this.nodeTypes = new ArrayList<String>();
         String[] tmp = PropertiesUtil.toStringArray(config.get(PROP_NODE_TYPES),
                 DEFAULT_NODE_TYPES);
-        
-        for(final String t : tmp) {
-            if(StringUtils.isNotBlank(t)) {
+
+        for (final String t : tmp) {
+            if (StringUtils.isNotBlank(t)) {
                 this.nodeTypes.add(t);
             }
         }
-        
+
         // Resource Types
-        
+
         this.resourceTypes = new ArrayList<String>();
         tmp = PropertiesUtil.toStringArray(config.get(PROP_RESOURCE_TYPES),
                 DEFAULT_RESOURCE_TYPES);
-        
-        for(final String t : tmp) {
-            if(StringUtils.isNotBlank(t)) {
+
+        for (final String t : tmp) {
+            if (StringUtils.isNotBlank(t)) {
                 this.resourceTypes.add(t);
             }
         }
 
         // Destination Property
-        
-        this.destinationProperty = PropertiesUtil.toString(config.get(PROP_DESTINATION_PROPERTY), DEFAULT_DESTINATION_PROPERTY);
-        
-        // Source Property 
-        
+
+        this.destinationProperty = PropertiesUtil.toString(config.get(PROP_DESTINATION_PROPERTY),
+                DEFAULT_DESTINATION_PROPERTY);
+
+        // Source Property
+
         this.sourceProperties = Arrays.asList(PropertiesUtil.toStringArray(config.get(PROP_SOURCE_PROPERTIES),
                 DEFAULT_SOURCE_PROPERTIES));
 
+
         if (CollectionUtils.isEmpty(this.nodeTypes)) {
-            log.warn("Tag Merge is targeting all JCR Primary Types");
+            log.info("Property Merge is targeting all Node Types");
+        } else {
+            log.info("Property Merge is target Node Types: {}", this.nodeTypes);
         }
-        
+
         if (CollectionUtils.isEmpty(this.resourceTypes)) {
-            log.warn("Tag Merge is targeting all Resource Types");
+            log.info("Property Merge is targeting all Resource Types");
+        } else {
+            log.info("Property Merge is target Resource Types: {}", this.resourceTypes);
         }
 
         if (StringUtils.isBlank(this.destinationProperty)) {
-            log.warn("Tag Merge destination property is Empty.");
+            log.warn("Property Merge destination property is Empty.");
+        } else {
+            log.info("Property Merge destination property is [ {} ]", this.destinationProperty);
         }
 
         if (CollectionUtils.isEmpty(this.sourceProperties)) {
-            log.warn("Tag Merge source properties list is Empty.");
+            log.warn("Property Merge source properties list is Empty.");
+        } else {
+            log.info("Property Merge source properties are {}", this.sourceProperties);
         }
     }
 
