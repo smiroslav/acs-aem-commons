@@ -1,5 +1,25 @@
+/*
+ * #%L
+ * ACS AEM Commons Bundle
+ * %%
+ * Copyright (C) 2015 Adobe
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
 package com.adobe.acs.commons.wcm.impl;
 
+import com.adobe.acs.commons.util.InfoWriter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -32,14 +52,14 @@ import javax.jcr.RepositoryException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
 @Component(
-        label = "ACS AEM Commons - Property Merge Event Listener",
+        label = "ACS AEM Commons - Property Merge Configuration Factory",
         description = "Merges the values from multiple source properties into a single property as a multi-value.",
         immediate = true,
         metatype = true,
@@ -61,6 +81,7 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
     private static final long TOO_LONG_IN_MS = 500;
 
     private static final String PROPERTY_TYPE_BOOLEAN = "boolean";
+    // Underlying type used is Calendar to support ModifiableValueMap
     private static final String PROPERTY_TYPE_DATE = "date";
     private static final String PROPERTY_TYPE_DOUBLE = "double";
     private static final String PROPERTY_TYPE_LONG = "long";
@@ -276,8 +297,7 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
 
         final T[] currentValues = properties.get(destination, emptyArray);
 
-        if (!CollectionUtils.isEqualCollection(Arrays.asList(currentValues),
-                collectedValues)) {
+        if (!collectedValues.equals(Arrays.asList(currentValues))) {
             properties.put(destination, collectedValues.toArray(emptyArray));
 
             if (resource.getResourceResolver().hasChanges()) {
@@ -290,25 +310,33 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
 
     @Activate
     protected void activate(final Map<String, String> config) {
+        final InfoWriter iw = new InfoWriter();
+
+        iw.title("Property Merge Configuration");
+
 
         // Allow Duplicate Values
 
         this.allowDuplicates = PropertiesUtil.toBoolean(config.get(PROP_ALLOW_DUPLICATES), DEFAULT_ALLOW_DUPLICATES);
 
+        iw.message("Allow Duplicates: {}", this.allowDuplicates);
+
         // Property Type
 
-        String propType = PropertiesUtil.toString(config.get(PROP_PROPERTY_TYPE), DEFAULT_PROPERTY_TYPE);
-        if (PROPERTY_TYPE_BOOLEAN.equals(propertyType)) {
+        final String propType = PropertiesUtil.toString(config.get(PROP_PROPERTY_TYPE), DEFAULT_PROPERTY_TYPE);
+        if (PROPERTY_TYPE_BOOLEAN.equals(propType)) {
             this.propertyType = Boolean.class;
-        } else if (PROPERTY_TYPE_DATE.equals(propertyType)) {
-            this.propertyType = Date.class;
-        } else if (PROPERTY_TYPE_DOUBLE.equals(propertyType)) {
+        } else if (PROPERTY_TYPE_DATE.equals(propType)) {
+            this.propertyType = Calendar.class;
+        } else if (PROPERTY_TYPE_DOUBLE.equals(propType)) {
             this.propertyType = Double.class;
-        } else if (PROPERTY_TYPE_LONG.equals(propertyType)) {
+        } else if (PROPERTY_TYPE_LONG.equals(propType)) {
             this.propertyType = Long.class;
         } else {
             this.propertyType = String.class;
         }
+
+        iw.message("Property Type: {}", this.propertyType.getSimpleName());
 
         // Node Types
 
@@ -320,6 +348,12 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
             if (StringUtils.isNotBlank(t)) {
                 this.nodeTypes.add(t);
             }
+        }
+
+        if (CollectionUtils.isEmpty(this.nodeTypes)) {
+            iw.message("Node Types: All Node Types");
+        } else {
+            iw.message("Node Types: {}", this.nodeTypes);
         }
 
         // Resource Types
@@ -334,40 +368,35 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
             }
         }
 
+        if (CollectionUtils.isEmpty(this.resourceTypes)) {
+            iw.message("Resource Types: All Resource Types");
+        } else {
+            iw.message("Node Types: {}", this.resourceTypes);
+        }
+
         // Destination Property
 
         this.destinationProperty = PropertiesUtil.toString(config.get(PROP_DESTINATION_PROPERTY),
                 DEFAULT_DESTINATION_PROPERTY);
+
+        iw.message("Destination Property: {}", this.destinationProperty);
+        if (StringUtils.isBlank(this.destinationProperty)) {
+            log.warn("Property Merge destination property is Empty.");
+        }
 
         // Source Property
 
         this.sourceProperties = Arrays.asList(PropertiesUtil.toStringArray(config.get(PROP_SOURCE_PROPERTIES),
                 DEFAULT_SOURCE_PROPERTIES));
 
-
-        if (CollectionUtils.isEmpty(this.nodeTypes)) {
-            log.info("Property Merge is targeting all Node Types");
-        } else {
-            log.info("Property Merge is target Node Types: {}", this.nodeTypes);
-        }
-
-        if (CollectionUtils.isEmpty(this.resourceTypes)) {
-            log.info("Property Merge is targeting all Resource Types");
-        } else {
-            log.info("Property Merge is target Resource Types: {}", this.resourceTypes);
-        }
-
-        if (StringUtils.isBlank(this.destinationProperty)) {
-            log.warn("Property Merge destination property is Empty.");
-        } else {
-            log.info("Property Merge destination property is [ {} ]", this.destinationProperty);
-        }
-
+        iw.message("Source Properties: {}", this.sourceProperties);
         if (CollectionUtils.isEmpty(this.sourceProperties)) {
             log.warn("Property Merge source properties list is Empty.");
-        } else {
-            log.info("Property Merge source properties are {}", this.sourceProperties);
         }
+
+
+        iw.close();
+        log.info(iw.toString());
     }
 
     @Override
