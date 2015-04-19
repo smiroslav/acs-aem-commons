@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component(
-        label = "ACS AEM Commons - Property Merge Configuration Factory",
+        label = "ACS AEM Commons - Property Merge Factory",
         description = "Merges the values from multiple source properties into a single property as a multi-value.",
         immediate = true,
         metatype = true,
@@ -89,18 +89,11 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
 
     private boolean isLeader = false;
 
-    private static final boolean DEFAULT_ALLOW_DUPLICATES = false;
-    private boolean allowDuplicates = DEFAULT_ALLOW_DUPLICATES;
-    @Property(label = "Allow duplicates",
-            description = "True allows duplicate values to be added to the destination. "
-                    + "False forces a unique set of values.",
-            boolValue = DEFAULT_ALLOW_DUPLICATES)
-    public static final String PROP_ALLOW_DUPLICATES = "allow-duplicate-values";
-
-    private static final String DEFAULT_PROPERTY_TYPE = "string";
+    private static final String DEFAULT_PROPERTY_TYPE = PROPERTY_TYPE_STRING;
     private Class propertyType = String[].class;
     @Property(label = "Property Type",
             description = "The property type of the Destinations and Source properties.",
+            value = PROPERTY_TYPE_STRING,
             options = {
                     @PropertyOption(name = PROPERTY_TYPE_BOOLEAN, value = "Boolean"),
                     @PropertyOption(name = PROPERTY_TYPE_DATE, value = "Date"),
@@ -143,6 +136,14 @@ public final class PropertyMergeEventListenerImpl implements EventHandler, Topol
     public static final String PROP_SOURCE_PROPERTIES = "source-properties";
 
     private List<String> sourceProperties = new ArrayList<String>();
+
+    private static final boolean DEFAULT_ALLOW_DUPLICATES = false;
+    private boolean allowDuplicates = DEFAULT_ALLOW_DUPLICATES;
+    @Property(label = "Allow duplicates",
+            description = "True allows duplicate values to be added to the destination. "
+                    + "False forces a unique set of values.",
+            boolValue = DEFAULT_ALLOW_DUPLICATES)
+    public static final String PROP_ALLOW_DUPLICATES = "allow-duplicate-values";
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
